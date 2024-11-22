@@ -2,15 +2,14 @@ import pygame
 import sys
 import random
 
-# Initialize Pygame
+
 pygame.init()
 
-# Screen dimensions
 SCREEN_WIDTH, SCREEN_HEIGHT = 1920, 1080
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("Game Interface")
+pygame.display.set_caption("GameBoy")
 
-# Colors
+
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 GRAY = (200, 200, 200)
@@ -18,13 +17,13 @@ HIGHLIGHT = (100, 100, 100)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 
-# Fonts
+
 font = pygame.font.Font(None, 72)
 
-# Game list
-games = ["Snake Game", "Dino Game", "Quit"]
 
-# Draw the main menu
+games = ["Snake Game", "Dino Game",]
+
+
 def draw_main_menu(selected_game):
     screen.fill(WHITE)
 
