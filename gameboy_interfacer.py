@@ -18,13 +18,14 @@ pygame.init()
 # Set up initial resolution
 WIDTH, HEIGHT = 800, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
-pygame.display.set_caption("Game Selector")
+pygame.display.set_caption("GameBoy")
+pygame.display.set_icon(pygame.image.load("gameboy.png"))
 
 # Colors
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-HIGHLIGHT = (0, 128, 255)
-OBSTACLE_COLOR = (255, 0, 0)
+HIGHLIGHT = (255, 0, 0)
+OBSTACLE_COLOR = (200, 200, 200)
 
 # Load game icons (ensure you have these images in the correct directory)
 def load_icon(image_path, width, height):
@@ -34,10 +35,10 @@ def load_icon(image_path, width, height):
 # Game icons (replace these paths with actual paths to your game icons)
 game_icons = [
     load_icon('dino_icon.png', 100, 100),  # Dino Game icon
-    load_icon('game1_icon.png', 100, 100),  # Game 1 icon
-    load_icon('game2_icon.png', 100, 100),  # Game 2 icon
-    load_icon('game3_icon.png', 100, 100),  # Game 3 icon
-    load_icon('game4_icon.png', 100, 100),  # Game 4 icon
+    load_icon('snake_icon.png', 100, 100),  # Game 1 icon
+    load_icon('tetris_icon.png', 100, 100),  # Game 2 icon
+    load_icon('space_invaders_icon.png', 100, 100),  # Game 3 icon
+    load_icon('tictactoe_icon.png', 100, 100),  # Game 4 icon
 ]
 
 # Fonts
@@ -172,25 +173,25 @@ def dino_game():
         pygame.display.flip()
         clock.tick(30)
 
-def game1():
+def snake_game():
     print("Game 1 Placeholder")
 
-def game2():
+def tetris_game():
     print("Game 2 Placeholder")
 
-def game3():
+def space_game():
     print("Game 3 Placeholder")
 
-def game4():
+def tictactoe_game():
     print("Game 4 Placeholder")
     
 # Main Menu Logic
 games = [
     {"name": "Dino Game", "func": dino_game, "icon": game_icons[0]},
-    {"name": "Game 1", "func": game1, "icon": game_icons[1]},
-    {"name": "Game 2", "func": game2, "icon": game_icons[2]},
-    {"name": "Game 3", "func": game3, "icon": game_icons[3]},
-    {"name": "Game 4", "func": game4, "icon": game_icons[4]},
+    {"name": "Snake Game", "func": snake_game, "icon": game_icons[1]},
+    {"name": "Tetris", "func": tetris_game , "icon": game_icons[2]},
+    {"name": "Space Invaders", "func": space_game, "icon": game_icons[3]},
+    {"name": "Tic-Tac-Toe", "func": tictactoe_game, "icon": game_icons[4]},
 ]
 
 
@@ -222,7 +223,6 @@ while state == "menu":
             icon_color = HIGHLIGHT if (i == selected_game and selected_option ==0) else WHITE
             icon = pygame.Surface(game["icon"].get_size())  # Create surface for icon highlight
             icon.fill(icon_color)
-            screen.blit(icon, (start_x + i * game_spacing - icon.get_width() // 2, HEIGHT * 0.4 - 10))
             screen.blit(game["icon"], (start_x + i * game_spacing - game["icon"].get_width() // 2, HEIGHT * 0.4))
 
             # Display Game Name

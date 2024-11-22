@@ -1,19 +1,38 @@
 import pygame
 import sys
+import random
 
 # Initialize Pygame
 pygame.init()
 
 # Set up initial resolution
-WIDTH, HEIGHT = 800, 600
+WIDTH, HEIGHT = 1920, 1080
 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
-pygame.display.set_caption("Game Selector")
+pygame.display.set_caption("GameBoy")
+pygame.display.set_icon(pygame.image.load("gameboy.png"))
 
 # Colors
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-HIGHLIGHT = (0, 128, 255)
-OBSTACLE_COLOR = (255, 0, 0)
+HIGHLIGHT = (255, 0, 0)
+OBSTACLE_COLOR = (200, 200, 200)
+BLUE = (0, 0, 255)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+YELLOW = (255, 255, 0)
+ORANGE = (255, 165, 0)
+BROWN = (165, 42, 42)
+
+# Define Tetris shapes and their colors
+SHAPES = [
+    ([[1, 1, 1, 1]], BLUE),  # I
+    ([[1, 1], [1, 1]], YELLOW),  # O
+    ([[0, 1, 0], [1, 1, 1]], GREEN),  # T
+    ([[1, 1, 0], [0, 1, 1]], RED),  # S
+    ([[0, 1, 1], [1, 1, 0]], ORANGE),  # Z
+    ([[1, 0, 0], [1, 1, 1]], BROWN),  # L
+    ([[0, 0, 1], [1, 1, 1]], WHITE),  # J
+]
 
 # Load game icons (ensure you have these images in the correct directory)
 def load_icon(image_path, width, height):
@@ -23,23 +42,22 @@ def load_icon(image_path, width, height):
 # Game icons (replace these paths with actual paths to your game icons)
 game_icons = [
     load_icon('dino_icon.png', 100, 100),  # Dino Game icon
-    load_icon('game1_icon.png', 100, 100),  # Game 1 icon
-    load_icon('game2_icon.png', 100, 100),  # Game 2 icon
-    load_icon('game3_icon.png', 100, 100),  # Game 3 icon
-    load_icon('game4_icon.png', 100, 100),  # Game 4 icon
+    load_icon('snake_icon.png', 100, 100),  # Game 1 icon
+    load_icon('tetris_icon.png', 100, 100),  # Game 2 icon
+    load_icon('space_invaders_icon.png', 100, 100),  # Game 3 icon
+    load_icon('tictactoe_icon.png', 100, 100),  # Game 4 icon
 ]
 
 # Fonts
 def get_scaled_font(size):
     return pygame.font.Font(None, size)
 
-# Modular Pause Menu Function
 def pause_menu():
     pause_options = ["Resume", "Return to Main Menu"]
     selected_pause_option = 0
     
     while True:
-        screen.fill(WHITE)
+        screen.fill(BLACK)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -57,19 +75,18 @@ def pause_menu():
         
         pause_font = get_scaled_font(int(HEIGHT * 0.07))
         for i, option in enumerate(pause_options):
-            color = HIGHLIGHT if i == selected_pause_option else BLACK
+            color = HIGHLIGHT if i == selected_pause_option else WHITE
             text = pause_font.render(option, True, color)
             screen.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT * 0.4 + i * 60))
         
         pygame.display.flip()
 
-# Modular Scoreboard Function
 def show_scoreboard(final_score, retry_callback):
     scoreboard_options = ["Retry", "Return to Main Menu"]
     selected_option = 0
     
     while True:
-        screen.fill(WHITE)
+        screen.fill(BLACK)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -78,7 +95,7 @@ def show_scoreboard(final_score, retry_callback):
                 if event.key == pygame.K_DOWN:
                     selected_option = (selected_option + 1) % len(scoreboard_options)
                 elif event.key == pygame.K_UP:
-                    selected_option = (selected_option - 1) % len(scoreboard_options)
+                    selected_option = (selected_option - 1 ) % len(scoreboard_options)
                 elif event.key == pygame.K_RETURN:
                     if scoreboard_options[selected_option] == "Retry":
                         retry_callback()  # Restart the game
@@ -87,17 +104,16 @@ def show_scoreboard(final_score, retry_callback):
                         return
         
         font = get_scaled_font(int(HEIGHT * 0.08))
-        score_text = font.render(f"Final Score: {final_score}", True, BLACK)
+        score_text = font.render(f"Final Score: {final_score}", True, WHITE)
         screen.blit(score_text, (WIDTH // 2 - score_text.get_width() // 2, HEIGHT * 0.2))
         
         for i, option in enumerate(scoreboard_options):
-            color = HIGHLIGHT if i == selected_option else BLACK
+            color = HIGHLIGHT if i == selected_option else WHITE
             text = get_scaled_font(int(HEIGHT * 0.07)).render(option, True, color)
             screen.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT * 0.4 + i * 80))
         
         pygame.display.flip()
 
-# Example Game Function
 def dino_game():
     global state
     clock = pygame.time.Clock()
@@ -152,38 +168,137 @@ def dino_game():
             return
         
         # Draw game
-        screen.fill(WHITE)
-        pygame.draw.rect(screen, BLACK, (100, dino_y, 50, 50))  # Dino
+        screen.fill(BLACK)
+        pygame.draw.rect(screen, WHITE, (100, dino_y, 50, 50))  # Dino
         pygame.draw.rect(screen, OBSTACLE_COLOR, (obstacle_x, HEIGHT - 100, 50, 50))  # Obstacle
         
         # Display score
         font = get_scaled_font(int(HEIGHT * 0.05))
-        score_text = font.render(f"Score: {score}", True, BLACK)
+        score_text = font.render(f"Score: {score}", True, WHITE)
         screen.blit(score_text, (10, 10))
         
         pygame.display.flip()
         clock.tick(30)
 
-# Placeholder Games
-def game1():
+def snake_game():
     print("Game 1 Placeholder")
 
-def game2():
-    print("Game 2 Placeholder")
+class Tetris:
+    def __init__(self):
+        self.grid = [[0 for _ in range(10)] for _ in range(20)]
+        self.current_piece, self.current_color = self.new_piece()
+        self.current_position = [0, 4]
+        self.score = 0
 
-def game3():
+    def new_piece(self):
+        shape, color = random.choice(SHAPES)
+        return shape, color
+
+    def rotate_piece(self):
+        self.current_piece = [list(row) for row in zip(*self.current_piece[::-1])]
+
+    def valid_position(self, dx=0, dy=0):
+        for y, row in enumerate(self.current_piece):
+            for x, cell in enumerate(row):
+                if cell:
+                    new_x = self.current_position[1] + x + dx
+                    new_y = self.current_position[0] + y + dy
+                    if new_x < 0 or new_x >= 10 or new_y >= 20 or self.grid[new_y][new_x]:
+                        return False
+        return True
+
+    def merge_piece(self):
+        for y, row in enumerate(self.current_piece):
+            for x, cell in enumerate(row):
+                if cell:
+                    self.grid[self.current_position[0] + y][self.current_position[1] + x] = self.current_color
+        self.clear_lines()
+        self.current_piece, self.current_color = self.new_piece()
+        self.current_position = [0, 4]
+        if not self.valid_position():
+            return False  # Game over
+        return True
+
+    def clear_lines(self):
+        new_grid = [row for row in self.grid if any(cell == 0 for cell in row)]
+        lines_cleared = 20 - len(new_grid)
+        self.score += lines_cleared
+        self.grid = [[0 for _ in range(10)]] * lines_cleared + new_grid
+
+    def drop_piece(self):
+        if self.valid_position(dy=1):
+            self.current_position[0] += 1
+        else:
+            self.merge_piece()
+
+def draw_tetris_grid(screen, grid):
+    BLOCK_SIZE = WIDTH // 10  # Calculate block size based on current width
+    for y, row in enumerate(grid):
+        for x, cell in enumerate(row):
+            if cell:
+                pygame.draw.rect(screen, cell, (x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE))
+
+def tetris_game():
+    global state
+    clock = pygame.time.Clock()
+    tetris = Tetris()
+    
+    while state == "game":
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    result = pause_menu()
+                    if result == "menu":
+                        state = "menu"
+                        return  # Return to main menu
+                elif event.key == pygame.K_LEFT and tetris.valid_position(dx=-1):
+                    tetris.current_position[1] -= 1
+                elif event.key == pygame.K_RIGHT and tetris.valid_position(dx=1):
+                    tetris.current_position[1] += 1
+                elif event.key == pygame.K_DOWN and tetris.valid_position(dy=1):
+                    tetris.current_position[0] += 1
+                elif event.key == pygame.K_UP:
+                    tetris.rotate_piece()
+                    if not tetris.valid_position():
+                        tetris.rotate_piece()  # Rotate back if invalid
+
+        # Game Logic
+        if not tetris.valid_position(dy=1):
+            if not tetris.merge_piece():
+                show_scoreboard(tetris.score, lambda: tetris_game())  # Restart the game
+                state = "menu"
+                return
+        else:
+            tetris.drop_piece()
+
+        # Draw game
+        screen.fill(BLACK)
+        draw_tetris_grid(screen, tetris.grid)
+
+        # Display score
+        font = get_scaled_font(int(HEIGHT * 0.05))
+        score_text = font.render(f"Score: {tetris.score}", True, WHITE)
+        screen.blit(score_text, (10, 10))
+
+        pygame.display.flip()
+        clock.tick(10)
+
+def space_game():
     print("Game 3 Placeholder")
 
-def game4():
+def tictactoe_game():
     print("Game 4 Placeholder")
 
 # Main Menu Logic
 games = [
     {"name": "Dino Game", "func": dino_game, "icon": game_icons[0]},
-    {"name": "Game 1", "func": game1, "icon": game_icons[1]},
-    {"name": "Game 2", "func": game2, "icon": game_icons[2]},
-    {"name": "Game 3", "func": game3, "icon": game_icons[3]},
-    {"name": "Game 4", "func": game4, "icon": game_icons[4]},
+    {"name": "Snake Game", "func": snake_game, "icon": game_icons[1]},
+    {"name": "Tetris", "func": tetris_game, "icon": game_icons[2]},
+    {"name": "Space Invaders", "func": space_game, "icon": game_icons[3]},
+    {"name": "Tic-Tac-Toe", "func": tictactoe_game, "icon": game_icons[4]},
 ]
 
 state = "menu"
@@ -192,37 +307,36 @@ selected_option = 0  # 0 for games, 1 for quit
 
 # Main loop
 while state == "menu":
-    screen.fill(WHITE)
+    screen.fill(BLACK)
     WIDTH, HEIGHT = screen.get_size()
     
     title_font = get_scaled_font(int(HEIGHT * 0.08))
     game_font = get_scaled_font(int(HEIGHT * 0.05))
     
     # Draw Title
-    title_text = title_font.render("Choose Game", True, BLACK)
+    title_text = title_font.render("Choose Game", True, WHITE)
     screen.blit(title_text, (WIDTH // 2 - title_text.get_width() // 2, HEIGHT * 0.1))
     
     # Horizontal Game Options
     game_spacing = WIDTH // len(games)
     start_x = (WIDTH - game_spacing * (len(games) - 1)) // 2
     
+    # Draw the game section (always visible, top section)
     for i, game in enumerate(games):
-        # Highlighting icon instead of name
-        icon_color = HIGHLIGHT if i == selected_game else BLACK
+        icon_color = HIGHLIGHT if (i == selected_game and selected_option == 0) else WHITE
         icon = pygame.Surface(game["icon"].get_size())  # Create surface for icon highlight
         icon.fill(icon_color)
-        screen.blit(icon, (start_x + i * game_spacing - icon.get_width() // 2, HEIGHT * 0.4 - 10))
-        screen.blit(game["icon"], (start_x + i * game_spacing - game["icon"].get_width() // 2, HEIGHT * 0.4))
+        screen.blit(game["icon"],( start_x + i * game_spacing - game["icon"].get_width() // 2, HEIGHT * 0.4))
 
         # Display Game Name
         game_name_text = game_font.render(game["name"], True, icon_color)
         screen.blit(game_name_text, (start_x + i * game_spacing - game_name_text.get_width() // 2, HEIGHT * 0.55))
 
-    # Draw Quit Option
+    # Draw Quit Option (Always visible at the bottom)
     quit_font = get_scaled_font(int(HEIGHT * 0.07))
-    quit_text = quit_font.render("Quit", True, BLACK)
-    screen.blit(quit_text, (WIDTH // 2 - quit_text.get_width() // 2, HEIGHT * 0.8))
-    
+    quit_text = quit_font.render("Quit", True, HIGHLIGHT if selected_option == 1 else WHITE)
+    screen.blit(quit_text, (WIDTH // 2 - quit_text.get_width() // 2, HEIGHT * 0.85))  # Placing at 85% of the height
+
     pygame.display.flip()
 
     # Handle Input
@@ -231,18 +345,23 @@ while state == "menu":
             pygame.quit()
             sys.exit()
         elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_LEFT:
+            if event.key == pygame.K_LEFT and selected_option == 0:
                 selected_game = (selected_game - 1) % len(games)
-            elif event.key == pygame.K_RIGHT:
+            elif event.key == pygame.K_RIGHT and selected_option == 0:
                 selected_game = (selected_game + 1) % len(games)
-            elif event.key == pygame.K_DOWN:
-                selected_option = 1
-            elif event.key == pygame.K_UP:
-                selected_option = 0
+            elif event.key == pygame.K_LEFT and selected_option == 1:
+                selected_game, selected_option = len(games) - 1, 0
+            elif event.key == pygame.K_RIGHT and selected_option == 1:
+                selected_game, selected_option = 0, 0
+            elif event.key == pygame.K_DOWN or event.key == pygame.K_UP:
+                if selected_option == 1:
+                    selected_option = 0
+                else:
+                    selected_option = 1
             elif event.key == pygame.K_RETURN:
                 if selected_option == 0:
                     state = "game"
-                    games[selected_game]["func"]()  # Start the selected game
+                    games[selected_game]["func"]()
                 elif selected_option == 1:
                     pygame.quit()
                     sys.exit()
