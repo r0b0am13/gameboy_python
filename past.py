@@ -1,17 +1,6 @@
 import pygame
 import sys
 
-"""
-
-Current Status :
-
-Added a layered approach for UI.
-Main Screen (Game Selection Screen) is resizable. Pause Menu and Game Menu is not resizable.
-Added modularized codes for a pause menu and scoreboard.
-Only Dino Game (Ultra basic) works Others dont really do anything.
-Suggest checking out all the screens.
-
-"""
 # Initialize Pygame
 pygame.init()
 
@@ -44,12 +33,13 @@ game_icons = [
 def get_scaled_font(size):
     return pygame.font.Font(None, size)
 
+# Modular Pause Menu Function
 def pause_menu():
     pause_options = ["Resume", "Return to Main Menu"]
     selected_pause_option = 0
     
     while True:
-        screen.fill(BLACK)
+        screen.fill(WHITE)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -67,18 +57,19 @@ def pause_menu():
         
         pause_font = get_scaled_font(int(HEIGHT * 0.07))
         for i, option in enumerate(pause_options):
-            color = HIGHLIGHT if i == selected_pause_option else WHITE
+            color = HIGHLIGHT if i == selected_pause_option else BLACK
             text = pause_font.render(option, True, color)
             screen.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT * 0.4 + i * 60))
         
         pygame.display.flip()
-        
+
+# Modular Scoreboard Function
 def show_scoreboard(final_score, retry_callback):
     scoreboard_options = ["Retry", "Return to Main Menu"]
     selected_option = 0
     
     while True:
-        screen.fill(BLACK)
+        screen.fill(WHITE)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -96,16 +87,17 @@ def show_scoreboard(final_score, retry_callback):
                         return
         
         font = get_scaled_font(int(HEIGHT * 0.08))
-        score_text = font.render(f"Final Score: {final_score}", True, WHITE)
+        score_text = font.render(f"Final Score: {final_score}", True, BLACK)
         screen.blit(score_text, (WIDTH // 2 - score_text.get_width() // 2, HEIGHT * 0.2))
         
         for i, option in enumerate(scoreboard_options):
-            color = HIGHLIGHT if i == selected_option else WHITE
+            color = HIGHLIGHT if i == selected_option else BLACK
             text = get_scaled_font(int(HEIGHT * 0.07)).render(option, True, color)
             screen.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT * 0.4 + i * 80))
         
         pygame.display.flip()
 
+# Example Game Function
 def dino_game():
     global state
     clock = pygame.time.Clock()
@@ -160,18 +152,19 @@ def dino_game():
             return
         
         # Draw game
-        screen.fill(BLACK)
-        pygame.draw.rect(screen, WHITE, (100, dino_y, 50, 50))  # Dino
+        screen.fill(WHITE)
+        pygame.draw.rect(screen, BLACK, (100, dino_y, 50, 50))  # Dino
         pygame.draw.rect(screen, OBSTACLE_COLOR, (obstacle_x, HEIGHT - 100, 50, 50))  # Obstacle
         
         # Display score
         font = get_scaled_font(int(HEIGHT * 0.05))
-        score_text = font.render(f"Score: {score}", True, WHITE)
+        score_text = font.render(f"Score: {score}", True, BLACK)
         screen.blit(score_text, (10, 10))
         
         pygame.display.flip()
         clock.tick(30)
 
+# Placeholder Games
 def game1():
     print("Game 1 Placeholder")
 
@@ -183,7 +176,7 @@ def game3():
 
 def game4():
     print("Game 4 Placeholder")
-    
+
 # Main Menu Logic
 games = [
     {"name": "Dino Game", "func": dino_game, "icon": game_icons[0]},
@@ -193,47 +186,43 @@ games = [
     {"name": "Game 4", "func": game4, "icon": game_icons[4]},
 ]
 
-
-
 state = "menu"
 selected_game = 0
 selected_option = 0  # 0 for games, 1 for quit
 
 # Main loop
 while state == "menu":
-    screen.fill(BLACK)
+    screen.fill(WHITE)
     WIDTH, HEIGHT = screen.get_size()
     
     title_font = get_scaled_font(int(HEIGHT * 0.08))
     game_font = get_scaled_font(int(HEIGHT * 0.05))
     
     # Draw Title
-    title_text = title_font.render("Choose Game", True, WHITE)
+    title_text = title_font.render("Choose Game", True, BLACK)
     screen.blit(title_text, (WIDTH // 2 - title_text.get_width() // 2, HEIGHT * 0.1))
     
     # Horizontal Game Options
     game_spacing = WIDTH // len(games)
     start_x = (WIDTH - game_spacing * (len(games) - 1)) // 2
     
-    # Draw the game section (always visible, top section)
-     # Game selection section
     for i, game in enumerate(games):
-            # Highlighting icon instead of name
-            icon_color = HIGHLIGHT if (i == selected_game and selected_option ==0) else WHITE
-            icon = pygame.Surface(game["icon"].get_size())  # Create surface for icon highlight
-            icon.fill(icon_color)
-            screen.blit(icon, (start_x + i * game_spacing - icon.get_width() // 2, HEIGHT * 0.4 - 10))
-            screen.blit(game["icon"], (start_x + i * game_spacing - game["icon"].get_width() // 2, HEIGHT * 0.4))
+        # Highlighting icon instead of name
+        icon_color = HIGHLIGHT if i == selected_game else BLACK
+        icon = pygame.Surface(game["icon"].get_size())  # Create surface for icon highlight
+        icon.fill(icon_color)
+        screen.blit(icon, (start_x + i * game_spacing - icon.get_width() // 2, HEIGHT * 0.4 - 10))
+        screen.blit(game["icon"], (start_x + i * game_spacing - game["icon"].get_width() // 2, HEIGHT * 0.4))
 
-            # Display Game Name
-            game_name_text = game_font.render(game["name"], True, icon_color)
-            screen.blit(game_name_text, (start_x + i * game_spacing - game_name_text.get_width() // 2, HEIGHT * 0.55))
+        # Display Game Name
+        game_name_text = game_font.render(game["name"], True, icon_color)
+        screen.blit(game_name_text, (start_x + i * game_spacing - game_name_text.get_width() // 2, HEIGHT * 0.55))
 
-    # Draw Quit Option (Always visible at the bottom)
+    # Draw Quit Option
     quit_font = get_scaled_font(int(HEIGHT * 0.07))
-    quit_text = quit_font.render("Quit", True, HIGHLIGHT if selected_option == 1 else WHITE)
-    screen.blit(quit_text, (WIDTH // 2 - quit_text.get_width() // 2, HEIGHT * 0.85))  # Placing at 85% of the height
-
+    quit_text = quit_font.render("Quit", True, BLACK)
+    screen.blit(quit_text, (WIDTH // 2 - quit_text.get_width() // 2, HEIGHT * 0.8))
+    
     pygame.display.flip()
 
     # Handle Input
@@ -242,23 +231,18 @@ while state == "menu":
             pygame.quit()
             sys.exit()
         elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_LEFT and selected_option == 0:
+            if event.key == pygame.K_LEFT:
                 selected_game = (selected_game - 1) % len(games)
-            elif event.key == pygame.K_RIGHT and selected_option == 0:
+            elif event.key == pygame.K_RIGHT:
                 selected_game = (selected_game + 1) % len(games)
-            elif event.key == pygame.K_LEFT and selected_option == 1:
-                selected_game,selected_option = len(games)-1 , 0
-            elif event.key == pygame.K_RIGHT and selected_option == 1:
-                selected_game,selected_option = 0 , 0
-            elif event.key == pygame.K_DOWN or event.key == pygame.K_UP:
-                if (selected_option == 1):
-                    selected_option = 0
-                else:
-                    selected_option = 1
+            elif event.key == pygame.K_DOWN:
+                selected_option = 1
+            elif event.key == pygame.K_UP:
+                selected_option = 0
             elif event.key == pygame.K_RETURN:
                 if selected_option == 0:
                     state = "game"
-                    games[selected_game]["func"]()
+                    games[selected_game]["func"]()  # Start the selected game
                 elif selected_option == 1:
                     pygame.quit()
                     sys.exit()
