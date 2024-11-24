@@ -26,6 +26,7 @@ WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 BLUE = (0, 0, 255)
 RED = (255, 0, 0)
+GREEN = (0, 255, 0)
 HIGHLIGHT = (255, 0, 0)
 OBSTACLE_COLOR = (200, 200, 200)
 
@@ -175,8 +176,96 @@ def dino_game():
         pygame.display.flip()
         clock.tick(30)
 
+import pygame
+import sys
+import random
+
 def snake_game():
-    print("Game 1 Placeholder")
+    global state
+    GRID_SIZE = 20  # Size of each grid cell
+    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    clock = pygame.time.Clock()
+
+    # Initial snake and food setup
+    snake = [[5, 5]]  # List of [x, y] positions
+    direction = [1, 0]  # Moving to the right initially
+    food = [random.randint(0, (WIDTH // GRID_SIZE) - 1), random.randint(0, (HEIGHT // GRID_SIZE) - 1)]
+    score = 0
+    game_over = False
+    font = pygame.font.SysFont("Arial", 25)
+
+    def place_food():
+        """Randomly place the food, ensuring it does not overlap with the snake."""
+        while True:
+            new_food = [random.randint(0, (WIDTH // GRID_SIZE) - 1),
+                        random.randint(0, (HEIGHT // GRID_SIZE) - 1)]
+            if new_food not in snake:
+                return new_food
+
+    while state == "game":
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    result = pause_menu()
+                    if result == "menu":
+                        state = "menu"
+                        return
+                if not game_over:
+                    if event.key == pygame.K_UP and direction != [0, 1]:
+                        direction = [0, -1]
+                    elif event.key == pygame.K_DOWN and direction != [0, -1]:
+                        direction = [0, 1]
+                    elif event.key == pygame.K_LEFT and direction != [1, 0]:
+                        direction = [-1, 0]
+                    elif event.key == pygame.K_RIGHT and direction != [-1, 0]:
+                        direction = [1, 0]
+
+        if not game_over:
+            # Move the snake
+            new_head = [snake[0][0] + direction[0], snake[0][1] + direction[1]]
+            snake.insert(0, new_head)
+
+            # Check for collisions
+            if (new_head in snake[1:] or
+                new_head[0] < 0 or new_head[1] < 0 or
+                new_head[0] >= WIDTH // GRID_SIZE or
+                new_head[1] >= HEIGHT // GRID_SIZE):
+                game_over = True
+
+            # Check for food
+            if new_head == food:
+                score += 1
+                food = place_food()
+            else:
+                snake.pop()  # Remove the tail unless eating food
+
+        # Drawing
+        screen.fill(BLACK)
+
+        # Draw the snake
+        for segment in snake:
+            pygame.draw.rect(screen, GREEN, (segment[0] * GRID_SIZE, segment[1] * GRID_SIZE, GRID_SIZE, GRID_SIZE))
+
+        # Draw the food
+        pygame.draw.rect(screen, RED, (food[0] * GRID_SIZE, food[1] * GRID_SIZE, GRID_SIZE, GRID_SIZE))
+
+        # Display score
+        score_text = font.render(f"Score: {score}", True, WHITE)
+        screen.blit(score_text, (10, 10))
+
+        if game_over:
+            winner_text = f"Game Over! Score: {score}"
+            show_scoreboard(winner_text, snake_game)  # Allow retry by passing snake_game
+            state = "menu"  # Go back to menu after showing scoreboard
+            return
+
+        pygame.display.flip()
+        clock.tick(10)  # Adjust the speed of the game
+
+
 
 def tetris_game():
     print("Game 2 Placeholder")
