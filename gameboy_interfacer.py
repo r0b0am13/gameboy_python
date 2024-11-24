@@ -123,7 +123,8 @@ def dino_game():
     randlower = 20
     randupper = 60
     clock = pygame.time.Clock()
-    dino_y = HEIGHT - 100
+    ground_y = HEIGHT - 100
+    dino_y = ground_y - 60  # Dino height is 60, place it above the ground
     dino_velocity = 0
     gravity = 1.5
     is_jumping = False
@@ -133,7 +134,8 @@ def dino_game():
 
     min_distance = 300  # Minimum distance between consecutive obstacles
     spawn_timer = 0  # Timer to control obstacle spawning
-    spawn_interval = 60 # Initial spawn interval (frames)
+    spawn_interval = 60  # Initial spawn interval (frames)
+
 
     def retry():
         dino_game()  # Restart the game
@@ -150,7 +152,6 @@ def dino_game():
             pygame.draw.rect(surface, color, (x + px * pixel_size, y + py * pixel_size, pixel_size, pixel_size))
 
     def draw_pixelated_cactus(surface, x, y):
-    
         cactus_pixels = [
             (0, 0),                  # Top
             (0, 1),                  # Middle
@@ -183,19 +184,19 @@ def dino_game():
         if is_jumping:
             dino_y += dino_velocity
             dino_velocity += gravity
-            if(keys[pygame.K_DOWN]):
-                dino_velocity += 10 
-            if dino_y >= HEIGHT - 100:
-                dino_y = HEIGHT - 100
+            if keys[pygame.K_DOWN]:
+                dino_velocity += 10
+            if dino_y >= ground_y - 60:  # Adjust to Dino's height
+                dino_y = ground_y - 60
                 is_jumping = False
 
         # Spawn obstacles at intervals
         spawn_timer += 1
         if spawn_timer >= spawn_interval:
             spawn_timer = 0
-            if not obstacles or WIDTH - obstacles[-1][0] > min_distance-100:
-                obstacles.append([WIDTH, HEIGHT - 100, False])  # Add False to track if passed
-                spawn_interval = random.randint(randlower,randupper)  # Randomize spawn interval
+            if not obstacles or WIDTH - obstacles[-1][0] > min_distance - 100:
+                obstacles.append([WIDTH, ground_y - 60, False])  # Adjust obstacle height
+                spawn_interval = random.randint(randlower, randupper)  # Randomize spawn interval
 
         # Move and manage obstacles
         for obstacle in obstacles:
@@ -218,12 +219,15 @@ def dino_game():
         for obstacle in obstacles:
             obstacle_rect = pygame.Rect(obstacle[0], obstacle[1], 20, 60)  # Adjusted size for new Cactus
             if dino_rect.colliderect(obstacle_rect):
-                show_scoreboard(score, retry,False)
+                show_scoreboard(score, retry, False)
                 state = "menu"
                 return
 
         # Draw game
         screen.fill(BLACK)
+
+        # Draw ground
+        pygame.draw.rect(screen, BORDER_COLOR, (0, ground_y, WIDTH, 100))
 
         # Draw pixelated Dino
         draw_pixelated_dino(screen, 100, dino_y, WHITE)
@@ -239,6 +243,7 @@ def dino_game():
 
         pygame.display.flip()
         clock.tick(30)
+
 
 def snake_game():
     global state
@@ -484,7 +489,7 @@ def tetris_game():
             return
 
         pygame.display.flip()
-        clock.tick(30)
+        clock.tick(60)
 
 
 
