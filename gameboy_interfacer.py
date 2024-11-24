@@ -15,6 +15,7 @@ Suggest checking out all the screens.
 """
 # Initialize Pygame
 pygame.init()
+pygame.mouse.set_visible(False)
 
 # Set up initial resolution
 WIDTH, HEIGHT = 1920, 1080
@@ -119,18 +120,20 @@ def show_scoreboard(final_score, retry_callback,custom):
 
 def dino_game():
     global state
+    randlower = 20
+    randupper = 60
     clock = pygame.time.Clock()
     dino_y = HEIGHT - 100
     dino_velocity = 0
-    gravity = 2
+    gravity = 1.5
     is_jumping = False
     obstacles = []  # List to store obstacle positions
-    obstacle_speed = 10
+    obstacle_speed = 15
     score = 0
 
     min_distance = 300  # Minimum distance between consecutive obstacles
     spawn_timer = 0  # Timer to control obstacle spawning
-    spawn_interval = 60  # Initial spawn interval (frames)
+    spawn_interval = 60 # Initial spawn interval (frames)
 
     def retry():
         dino_game()  # Restart the game
@@ -175,13 +178,13 @@ def dino_game():
         keys = pygame.key.get_pressed()
         if (keys[pygame.K_SPACE] or keys[pygame.K_UP]) and not is_jumping:
             is_jumping = True
-            dino_velocity = -20
+            dino_velocity = -30
 
         if is_jumping:
             dino_y += dino_velocity
             dino_velocity += gravity
             if(keys[pygame.K_DOWN]):
-                dino_velocity + 10
+                dino_velocity += 10 
             if dino_y >= HEIGHT - 100:
                 dino_y = HEIGHT - 100
                 is_jumping = False
@@ -190,9 +193,9 @@ def dino_game():
         spawn_timer += 1
         if spawn_timer >= spawn_interval:
             spawn_timer = 0
-            if not obstacles or WIDTH - obstacles[-1][0] > min_distance:
+            if not obstacles or WIDTH - obstacles[-1][0] > min_distance-100:
                 obstacles.append([WIDTH, HEIGHT - 100, False])  # Add False to track if passed
-                spawn_interval = random.randint(50, 80)  # Randomize spawn interval
+                spawn_interval = random.randint(randlower,randupper)  # Randomize spawn interval
 
         # Move and manage obstacles
         for obstacle in obstacles:
@@ -208,14 +211,14 @@ def dino_game():
 
         # Increase speed gradually based on score
         if score % 5 == 0 and score > 0:
-            obstacle_speed += 0.01  # Smooth speed increase
+            obstacle_speed += 0.1  # Smooth speed increase
 
         # Collision detection
         dino_rect = pygame.Rect(100, dino_y, 40, 60)  # Adjusted size for new Dino
         for obstacle in obstacles:
             obstacle_rect = pygame.Rect(obstacle[0], obstacle[1], 20, 60)  # Adjusted size for new Cactus
             if dino_rect.colliderect(obstacle_rect):
-                show_scoreboard(score, retry)
+                show_scoreboard(score, retry,False)
                 state = "menu"
                 return
 
