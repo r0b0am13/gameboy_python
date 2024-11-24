@@ -29,6 +29,10 @@ RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 HIGHLIGHT = (255, 0, 0)
 OBSTACLE_COLOR = (200, 200, 200)
+CYAN = (0, 255, 255)
+ORANGE = (255, 165, 0)
+YELLOW = (255, 255, 0)
+PURPLE = (128, 0, 128)
 
 # Load game icons (ensure you have these images in the correct directory)
 def load_icon(image_path, width, height):
@@ -265,10 +269,146 @@ def snake_game():
         pygame.display.flip()
         clock.tick(10)  # Adjust the speed of the game
 
-
-
 def tetris_game():
-    print("Game 2 Placeholder")
+    global state
+    GRID_SIZE = 30  # Size of each block
+    COLS = WIDTH // GRID_SIZE
+    ROWS = HEIGHT // GRID_SIZE
+    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    clock = pygame.time.Clock()
+
+    COLORS = [CYAN, BLUE, ORANGE, YELLOW, GREEN, PURPLE, RED]
+
+    # Tetromino shapes
+    TETROMINOES = [
+        [[1, 1, 1, 1]],  # I
+        [[2, 2], [2, 2]],  # O
+        [[0, 3, 0], [3, 3, 3]],  # T
+        [[0, 4, 4], [4, 4, 0]],  # S
+        [[5, 5, 0], [0, 5, 5]],  # Z
+        [[6, 6, 6], [6, 0, 0]],  # L
+        [[7, 7, 7], [0, 0, 7]],  # J
+    ]
+
+    # Game variables
+    grid = [[0] * COLS for _ in range(ROWS)]
+    current_piece = None
+    piece_position = [0, COLS // 2 - 2]
+    score = 0
+    game_over = False
+
+    fall_speed = 500  # Milliseconds between automatic downward moves
+    last_fall_time = pygame.time.get_ticks()
+
+    font = pygame.font.SysFont("Arial", 25)
+
+    def spawn_piece():
+        return random.choice(TETROMINOES)
+
+    def draw_grid():
+        for row in range(ROWS):
+            for col in range(COLS):
+                if grid[row][col] != 0:
+                    pygame.draw.rect(screen, COLORS[grid[row][col] - 1],
+                                     (col * GRID_SIZE, row * GRID_SIZE, GRID_SIZE, GRID_SIZE))
+                    pygame.draw.rect(screen, (0, 0, 0),
+                                     (col * GRID_SIZE, row * GRID_SIZE, GRID_SIZE, GRID_SIZE), 2)
+
+    def draw_piece(piece, position):
+        for i, row in enumerate(piece):
+            for j, cell in enumerate(row):
+                if cell != 0:
+                    pygame.draw.rect(screen, COLORS[cell - 1],
+                                     ((position[1] + j) * GRID_SIZE, (position[0] + i) * GRID_SIZE, GRID_SIZE, GRID_SIZE))
+                    pygame.draw.rect(screen, (0, 0, 0),
+                                     ((position[1] + j) * GRID_SIZE, (position[0] + i) * GRID_SIZE, GRID_SIZE, GRID_SIZE), 2)
+
+    def check_collision(piece, position):
+        for i, row in enumerate(piece):
+            for j, cell in enumerate(row):
+                if cell != 0:
+                    x, y = position[1] + j, position[0] + i
+                    if x < 0 or x >= COLS or y >= ROWS or (y >= 0 and grid[y][x] != 0):
+                        return True
+        return False
+
+    def lock_piece(piece, position):
+        nonlocal score
+        for i, row in enumerate(piece):
+            for j, cell in enumerate(row):
+                if cell != 0:
+                    grid[position[0] + i][position[1] + j] = cell
+
+        cleared_rows = 0
+        for i in range(ROWS):
+            if all(grid[i]):
+                del grid[i]
+                grid.insert(0, [0] * COLS)
+                cleared_rows += 1
+
+        score += cleared_rows ** 2
+
+    current_piece = spawn_piece()
+
+    while state == "game":
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    result = pause_menu()
+                    if result == "menu":
+                        state = "menu"
+                        return
+                if not game_over:
+                    if event.key == pygame.K_LEFT:
+                        new_position = [piece_position[0], piece_position[1] - 1]
+                        if not check_collision(current_piece, new_position):
+                            piece_position = new_position
+                    elif event.key == pygame.K_RIGHT:
+                        new_position = [piece_position[0], piece_position[1] + 1]
+                        if not check_collision(current_piece, new_position):
+                            piece_position = new_position
+                    elif event.key == pygame.K_DOWN:
+                        new_position = [piece_position[0] + 1, piece_position[1]]
+                        if not check_collision(current_piece, new_position):
+                            piece_position = new_position
+                    elif event.key == pygame.K_SPACE:
+                        rotated = list(zip(*current_piece[::-1]))
+                        if not check_collision(rotated, piece_position):
+                            current_piece = rotated
+
+        if not game_over:
+            # Timer-based downward movement
+            current_time = pygame.time.get_ticks()
+            if current_time - last_fall_time > fall_speed:
+                last_fall_time = current_time
+                new_position = [piece_position[0] + 1, piece_position[1]]
+                if check_collision(current_piece, new_position):
+                    lock_piece(current_piece, piece_position)
+                    current_piece = spawn_piece()
+                    piece_position = [0, COLS // 2 - 2]
+                    if check_collision(current_piece, piece_position):
+                        game_over = True
+                else:
+                    piece_position = new_position
+
+        screen.fill((0, 0, 0))
+        draw_grid()
+        draw_piece(current_piece, piece_position)
+
+        score_text = font.render(f"Score: {score}", True, WHITE)
+        screen.blit(score_text, (10, 10))
+
+        if game_over:
+            winner_text = f"Game Over! Score: {score}"
+            show_scoreboard(winner_text, tetris_game)
+            state = "menu"
+            return
+
+        pygame.display.flip()
+        clock.tick(60)
 
 def space_game():
     print("Game 3 Placeholder")
