@@ -17,7 +17,7 @@ Suggest checking out all the screens.
 pygame.init()
 
 # Set up initial resolution
-WIDTH, HEIGHT = 800, 600
+WIDTH, HEIGHT = 1920, 1080
 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
 pygame.display.set_caption("GameBoy")
 pygame.display.set_icon(pygame.image.load("gameboy.png"))
@@ -34,6 +34,8 @@ CYAN = (0, 255, 255)
 ORANGE = (255, 165, 0)
 YELLOW = (255, 255, 0)
 PURPLE = (128, 0, 128)
+DARK_GREEN = (21,71,52)
+BORDER_COLOR = (50,50,50)
 
 # Load game icons (ensure you have these images in the correct directory)
 def load_icon(image_path, width, height):
@@ -82,7 +84,7 @@ def pause_menu():
         
         pygame.display.flip()
         
-def show_scoreboard(final_score, retry_callback):
+def show_scoreboard(final_score, retry_callback,custom):
     scoreboard_options = ["Retry", "Return to Main Menu"]
     selected_option = 0
     
@@ -105,7 +107,7 @@ def show_scoreboard(final_score, retry_callback):
                         return
         
         font = get_scaled_font(int(HEIGHT * 0.08))
-        score_text = font.render(f"Final Score: {final_score}", True, WHITE)
+        score_text = font.render(f"Final Score: {final_score}", True, WHITE) if (not custom) else font.render(f"{final_score}",True,WHITE)
         screen.blit(score_text, (WIDTH // 2 - score_text.get_width() // 2, HEIGHT * 0.2))
         
         for i, option in enumerate(scoreboard_options):
@@ -120,15 +122,43 @@ def dino_game():
     clock = pygame.time.Clock()
     dino_y = HEIGHT - 100
     dino_velocity = 0
-    gravity = 1
+    gravity = 2
     is_jumping = False
-    obstacle_x = WIDTH
+    obstacles = []  # List to store obstacle positions
     obstacle_speed = 10
     score = 0
-    
+
+    min_distance = 300  # Minimum distance between consecutive obstacles
+    spawn_timer = 0  # Timer to control obstacle spawning
+    spawn_interval = 60  # Initial spawn interval (frames)
+
     def retry():
         dino_game()  # Restart the game
+
+    def draw_pixelated_dino(surface, x, y, color):
+        dino_pixels = [
+            (0, 0), (1, 0),         # Top row (head)
+            (0, 1),                 # Body
+            (0, 2), (1, 2)          # Legs
+        ]
+        pixel_size = 20  # Increase size for better visibility
+
+        for px, py in dino_pixels:
+            pygame.draw.rect(surface, color, (x + px * pixel_size, y + py * pixel_size, pixel_size, pixel_size))
+
+    def draw_pixelated_cactus(surface, x, y):
     
+        cactus_pixels = [
+            (0, 0),                  # Top
+            (0, 1),                  # Middle
+            (0, 2)                   # Base
+        ]
+        pixel_size = 20  # Larger cactus pixels
+
+        for px, py in cactus_pixels:
+            color = DARK_GREEN if py % 2 == 0 else GREEN  # Alternate colors for texture
+            pygame.draw.rect(surface, color, (x + px * pixel_size, y + py * pixel_size, pixel_size, pixel_size))
+
     while state == "game":
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -140,65 +170,91 @@ def dino_game():
                     if result == "menu":
                         state = "menu"
                         return  # Return to main menu
-        
+
         # Game Logic
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_SPACE] and not is_jumping:
+        if (keys[pygame.K_SPACE] or keys[pygame.K_UP]) and not is_jumping:
             is_jumping = True
             dino_velocity = -20
-        
+
         if is_jumping:
             dino_y += dino_velocity
             dino_velocity += gravity
+            if(keys[pygame.K_DOWN]):
+                dino_velocity + 10
             if dino_y >= HEIGHT - 100:
                 dino_y = HEIGHT - 100
                 is_jumping = False
-        
-        # Move obstacle
-        obstacle_x -= obstacle_speed
-        if obstacle_x < 0:
-            obstacle_x = WIDTH
-            score += 1
-        
+
+        # Spawn obstacles at intervals
+        spawn_timer += 1
+        if spawn_timer >= spawn_interval:
+            spawn_timer = 0
+            if not obstacles or WIDTH - obstacles[-1][0] > min_distance:
+                obstacles.append([WIDTH, HEIGHT - 100, False])  # Add False to track if passed
+                spawn_interval = random.randint(50, 80)  # Randomize spawn interval
+
+        # Move and manage obstacles
+        for obstacle in obstacles:
+            obstacle[0] -= obstacle_speed  # Move obstacle to the left
+
+            # Update score if obstacle passed the Dino
+            if obstacle[0] + 50 < 100 and not obstacle[2]:
+                score += 1
+                obstacle[2] = True  # Mark as passed to avoid double counting
+
+        # Remove off-screen obstacles
+        obstacles = [obs for obs in obstacles if obs[0] > -50]
+
+        # Increase speed gradually based on score
+        if score % 5 == 0 and score > 0:
+            obstacle_speed += 0.01  # Smooth speed increase
+
         # Collision detection
-        dino_rect = pygame.Rect(100, dino_y, 50, 50)
-        obstacle_rect = pygame.Rect(obstacle_x, HEIGHT - 100, 50, 50)
-        if dino_rect.colliderect(obstacle_rect):
-            show_scoreboard(score, retry)
-            state = "menu"
-            return
-        
+        dino_rect = pygame.Rect(100, dino_y, 40, 60)  # Adjusted size for new Dino
+        for obstacle in obstacles:
+            obstacle_rect = pygame.Rect(obstacle[0], obstacle[1], 20, 60)  # Adjusted size for new Cactus
+            if dino_rect.colliderect(obstacle_rect):
+                show_scoreboard(score, retry)
+                state = "menu"
+                return
+
         # Draw game
         screen.fill(BLACK)
-        pygame.draw.rect(screen, WHITE, (100, dino_y, 50, 50))  # Dino
-        pygame.draw.rect(screen, OBSTACLE_COLOR, (obstacle_x, HEIGHT - 100, 50, 50))  # Obstacle
-        
+
+        # Draw pixelated Dino
+        draw_pixelated_dino(screen, 100, dino_y, WHITE)
+
+        # Draw pixelated Cactus obstacles
+        for obstacle in obstacles:
+            draw_pixelated_cactus(screen, obstacle[0], obstacle[1])
+
         # Display score
         font = get_scaled_font(int(HEIGHT * 0.05))
         score_text = font.render(f"Score: {score}", True, WHITE)
         screen.blit(score_text, (10, 10))
-        
+
         pygame.display.flip()
         clock.tick(30)
 
 def snake_game():
     global state
-    GRID_SIZE = 20  # Size of each grid cell
+    GRID_SIZE = 30  # Size of each grid cell
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     clock = pygame.time.Clock()
 
-    # Initial snake and food setup
-    snake = [[5, 5]]  # List of [x, y] positions
+    # Initial snake setup: size of 3
+    snake = [[5, 5], [4, 5], [3, 5]]  # Starting with 3 segments
     direction = [1, 0]  # Moving to the right initially
-    food = [random.randint(0, (WIDTH // GRID_SIZE) - 1), random.randint(0, (HEIGHT // GRID_SIZE) - 1)]
+    food = [random.randint(1, (WIDTH // GRID_SIZE) - 2), random.randint(1, (HEIGHT // GRID_SIZE) - 2)]
     score = 0
     game_over = False
 
     def place_food():
-        """Randomly place the food, ensuring it does not overlap with the snake."""
+        """Randomly place the food, ensuring it does not overlap with the snake or border."""
         while True:
-            new_food = [random.randint(0, (WIDTH // GRID_SIZE) - 1),
-                        random.randint(0, (HEIGHT // GRID_SIZE) - 1)]
+            new_food = [random.randint(1, (WIDTH // GRID_SIZE) - 2),
+                        random.randint(1, (HEIGHT // GRID_SIZE) - 2)]
             if new_food not in snake:
                 return new_food
 
@@ -228,11 +284,11 @@ def snake_game():
             new_head = [snake[0][0] + direction[0], snake[0][1] + direction[1]]
             snake.insert(0, new_head)
 
-            # Check for collisions
+            # Check for collisions with self or border
             if (new_head in snake[1:] or
-                new_head[0] < 0 or new_head[1] < 0 or
-                new_head[0] >= WIDTH // GRID_SIZE or
-                new_head[1] >= HEIGHT // GRID_SIZE):
+                new_head[0] <= 0 or new_head[1] <= 0 or
+                new_head[0] >= WIDTH // GRID_SIZE - 1 or
+                new_head[1] >= HEIGHT // GRID_SIZE - 1):
                 game_over = True
 
             # Check for food
@@ -245,26 +301,38 @@ def snake_game():
         # Drawing
         screen.fill(BLACK)
 
+        # Draw the border
+        for x in range(0, WIDTH, GRID_SIZE):
+            pygame.draw.rect(screen, BORDER_COLOR, (x, 0, GRID_SIZE, GRID_SIZE))
+            pygame.draw.rect(screen, BORDER_COLOR, (x, HEIGHT - GRID_SIZE, GRID_SIZE, GRID_SIZE))
+        for y in range(0, HEIGHT, GRID_SIZE):
+            pygame.draw.rect(screen, BORDER_COLOR, (0, y, GRID_SIZE, GRID_SIZE))
+            pygame.draw.rect(screen, BORDER_COLOR, (WIDTH - GRID_SIZE, y, GRID_SIZE, GRID_SIZE))
+
         # Draw the snake
-        for segment in snake:
-            pygame.draw.rect(screen, GREEN, (segment[0] * GRID_SIZE, segment[1] * GRID_SIZE, GRID_SIZE, GRID_SIZE))
+        for i, segment in enumerate(snake):
+            if i == 0:  # Head of the snake
+                pygame.draw.rect(screen, DARK_GREEN,
+                                 (segment[0] * GRID_SIZE, segment[1] * GRID_SIZE, GRID_SIZE, GRID_SIZE))
+            else:  # Body of the snake
+                pygame.draw.rect(screen, GREEN,
+                                 (segment[0] * GRID_SIZE, segment[1] * GRID_SIZE, GRID_SIZE, GRID_SIZE))
 
         # Draw the food
         pygame.draw.rect(screen, RED, (food[0] * GRID_SIZE, food[1] * GRID_SIZE, GRID_SIZE, GRID_SIZE))
 
         # Display score
-        font = get_scaled_font(int(HEIGHT * 0.05))
+        font = get_scaled_font(int(HEIGHT * 0.04))
         score_text = font.render(f"Score: {score}", True, WHITE)
         screen.blit(score_text, (10, 10))
 
         if game_over:
-            winner_text = f"Game Over! Score: {score}"
-            show_scoreboard(winner_text, snake_game)  # Allow retry by passing snake_game
+            show_scoreboard(score, snake_game)  # Allow retry by passing snake_game
             state = "menu"  # Go back to menu after showing scoreboard
             return
 
         pygame.display.flip()
-        clock.tick(10)  # Adjust the speed of the game
+        clock.tick(10)
 
 def tetris_game():
     global state
@@ -399,7 +467,7 @@ def tetris_game():
 
         if game_over:
             winner_text = f"Game Over! Score: {score}"
-            show_scoreboard(winner_text, tetris_game)
+            show_scoreboard(winner_text, tetris_game,True)
             state = "menu"
             return
 
@@ -435,7 +503,7 @@ def space_game():
 
     # Enemies - Dynamic shapes
     def create_enemies():
-        """Create enemies with random shapes and sizes."""
+     
         enemies = []
         for row in range(enemy_rows):
             row_enemies = []
@@ -456,7 +524,7 @@ def space_game():
     
     enemy_rows = 4
     enemy_cols = 8
-    enemy_speed = 2
+    enemy_speed = 20  
     enemy_direction = 1
     enemy_y_down = 10
     enemies = create_enemies()
@@ -518,7 +586,6 @@ def space_game():
                         break
 
     def reset_game():
-        """Reset the game to its initial state."""
         nonlocal enemies, score, game_over
         enemies = create_enemies()
         game_over = False
@@ -572,7 +639,7 @@ def space_game():
 
         # Game Over screen
         if game_over:
-            winner_text = f"Game Over! Score: {score}"
+            winner_text = f" Score: {score}"
             show_scoreboard(winner_text, space_game)
             state = "menu"
             return
@@ -591,12 +658,12 @@ def tictactoe_game():
     font = get_scaled_font(int(HEIGHT * 0.08))
 
     # Game variables
-    current_player = "X"
+    current_player = random.choice(["X", "O"])  # Randomly choose starter (X for Player, O for AI)
     game_over = False
     cursor_position = [0, 0]  
 
     def check_winner():
-        """Check if there's a winner or if the game is a draw."""
+      
         nonlocal game_over
 
         # Check rows
@@ -606,7 +673,7 @@ def tictactoe_game():
 
         # Check columns
         for col in range(BOARD_SIZE):
-            if board[0][col] == board[1][col] == board[2] != "":
+            if board[0][col] == board[1][col] == board[2][col] != "":
                 return board[0][col]
 
         # Check diagonals
@@ -623,12 +690,33 @@ def tictactoe_game():
         return None
 
     def reset_game():
-        """Reset the game board and variables."""
-        nonlocal board, current_player, game_over, cursor_position
-        board = [["" for _ in range(BOARD_SIZE)] for _ in range(BOARD_SIZE)]
-        current_player = "X"
-        game_over = False
-        cursor_position = [0, 0]
+        tictactoe_game()
+
+    def ai_move():
+       
+        # Try to win or block a win
+        for row in range(BOARD_SIZE):
+            for col in range(BOARD_SIZE):
+                if board[row][col] == "":
+                    # Simulate the AI making a move
+                    board[row][col] = "O"
+                    if check_winner() == "O":
+                        return
+                    board[row][col] = ""  # Undo move
+
+                    # Simulate the AI blocking the player's win
+                    board[row][col] = "X"
+                    if check_winner() == "X":
+                        board[row][col] = "O"
+                        return
+                    board[row][col] = ""  # Undo move
+
+        # Play in the first available cell
+        for row in range(BOARD_SIZE):
+            for col in range(BOARD_SIZE):
+                if board[row][col] == "":
+                    board[row][col] = "O"
+                    return
 
     while state == "game":
         for event in pygame.event.get():
@@ -642,7 +730,7 @@ def tictactoe_game():
                         state = "menu"
                         return  # Return to main menu
 
-                if not game_over:
+                if not game_over and current_player == "X":  # Player controls only on their turn
                     if event.key == pygame.K_UP:
                         cursor_position[0] = (cursor_position[0] - 1) % BOARD_SIZE
                     elif event.key == pygame.K_DOWN:
@@ -658,11 +746,21 @@ def tictactoe_game():
                             winner = check_winner()
                             if winner:
                                 game_over = True
-                                print(f"{winner} wins!" if winner != "Draw" else "It's a draw!")
+                                
                             current_player = "O" if current_player == "X" else "X"
 
                 if event.key == pygame.K_r:  # Reset game with 'R'
                     reset_game()
+
+        # AI's turn
+        if not game_over and current_player == "O":
+            pygame.time.wait(500)  # Add a slight delay for AI's move
+            ai_move()
+            winner = check_winner()
+            if winner:
+                game_over = True
+                
+            current_player = "X"
 
         # Drawing
         screen.fill(WHITE)
@@ -683,22 +781,23 @@ def tictactoe_game():
                     screen.blit(text, text_rect)
 
         # Highlight the current cursor position
-        pygame.draw.rect(
-            screen,
-            RED,
-            (
-                cursor_position[1] * CELL_WIDTH,
-                cursor_position[0] * CELL_HEIGHT,
-                CELL_WIDTH,
-                CELL_HEIGHT,
-            ),
-            5,
-        )
+        if not game_over and current_player == "X":  # Highlight only for the player's turn
+            pygame.draw.rect(
+                screen,
+                RED,
+                (
+                    cursor_position[1] * CELL_WIDTH,
+                    cursor_position[0] * CELL_HEIGHT,
+                    CELL_WIDTH,
+                    CELL_HEIGHT,
+                ),
+                5,
+            )
 
         # Display winner
         if game_over:
             winner_text = "Draw!" if winner == "Draw" else f"{winner} wins!"
-            show_scoreboard(winner_text, reset_game)
+            show_scoreboard(winner_text, reset_game,True)
             state = "menu"  # Go back to menu after showing scoreboard
             return
 
