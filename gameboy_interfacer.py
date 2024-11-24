@@ -18,7 +18,7 @@ pygame.init()
 pygame.mouse.set_visible(False)
 
 # Set up initial resolution
-WIDTH, HEIGHT = 1920, 1080
+WIDTH, HEIGHT = 800, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
 pygame.display.set_caption("GameBoy")
 pygame.display.set_icon(pygame.image.load("gameboy.png"))
