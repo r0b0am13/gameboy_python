@@ -1,5 +1,6 @@
 import pygame
 import sys
+import random 
 
 """
 
@@ -180,10 +181,6 @@ def dino_game():
         pygame.display.flip()
         clock.tick(30)
 
-import pygame
-import sys
-import random
-
 def snake_game():
     global state
     GRID_SIZE = 20  # Size of each grid cell
@@ -196,7 +193,6 @@ def snake_game():
     food = [random.randint(0, (WIDTH // GRID_SIZE) - 1), random.randint(0, (HEIGHT // GRID_SIZE) - 1)]
     score = 0
     game_over = False
-    font = pygame.font.SysFont("Arial", 25)
 
     def place_food():
         """Randomly place the food, ensuring it does not overlap with the snake."""
@@ -257,6 +253,7 @@ def snake_game():
         pygame.draw.rect(screen, RED, (food[0] * GRID_SIZE, food[1] * GRID_SIZE, GRID_SIZE, GRID_SIZE))
 
         # Display score
+        font = get_scaled_font(int(HEIGHT * 0.05))
         score_text = font.render(f"Score: {score}", True, WHITE)
         screen.blit(score_text, (10, 10))
 
@@ -299,8 +296,6 @@ def tetris_game():
 
     fall_speed = 500  # Milliseconds between automatic downward moves
     last_fall_time = pygame.time.get_ticks()
-
-    font = pygame.font.SysFont("Arial", 25)
 
     def spawn_piece():
         return random.choice(TETROMINOES)
@@ -398,6 +393,7 @@ def tetris_game():
         draw_grid()
         draw_piece(current_piece, piece_position)
 
+        font = get_scaled_font(int(HEIGHT * 0.05))
         score_text = font.render(f"Score: {score}", True, WHITE)
         screen.blit(score_text, (10, 10))
 
@@ -411,7 +407,179 @@ def tetris_game():
         clock.tick(60)
 
 def space_game():
-    print("Game 3 Placeholder")
+    global state
+    WIDTH, HEIGHT = 800, 600
+    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    clock = pygame.time.Clock()
+
+    # Colors
+    WHITE = (255, 255, 255)
+    BLACK = (0, 0, 0)
+    RED = (255, 0, 0)
+    GREEN = (0, 255, 0)
+    BLUE = (0, 0, 255)
+    YELLOW = (255, 255, 0)
+    
+    # Player
+    player_width = 50
+    player_height = 15
+    player_x = WIDTH // 2 - player_width // 2
+    player_y = HEIGHT - player_height - 10
+    player_speed = 7
+
+    # Bullets
+    bullets = []
+    bullet_speed = -8
+    bullet_width = 5
+    bullet_height = 10
+
+    # Enemies - Dynamic shapes
+    def create_enemies():
+        """Create enemies with random shapes and sizes."""
+        enemies = []
+        for row in range(enemy_rows):
+            row_enemies = []
+            for col in range(enemy_cols):
+                shape_type = random.choice(['rectangle', 'circle', 'triangle'])
+                size = random.randint(25, 40)
+                x = col * (size + 10) + 60
+                y = row * (size + 10) + 50
+                row_enemies.append({
+                    'shape': shape_type,
+                    'size': size,
+                    'x': x,
+                    'y': y,
+                    'color': random.choice([RED, GREEN, BLUE])
+                })
+            enemies.append(row_enemies)
+        return enemies
+    
+    enemy_rows = 4
+    enemy_cols = 8
+    enemy_speed = 2
+    enemy_direction = 1
+    enemy_y_down = 10
+    enemies = create_enemies()
+
+    # Game variables
+    score = 0
+    game_over = False
+    font = get_scaled_font(int(HEIGHT * 0.05))
+
+
+    def draw_player():
+        pygame.draw.rect(screen, GREEN, (player_x, player_y, player_width, player_height))
+
+    def draw_bullets():
+        for bullet in bullets:
+            pygame.draw.rect(screen, YELLOW, bullet)
+
+    def draw_enemies():
+        for row in enemies:
+            for enemy in row:
+                if enemy['shape'] == 'rectangle':
+                    pygame.draw.rect(screen, enemy['color'], (enemy['x'], enemy['y'], enemy['size'], enemy['size']))
+                elif enemy['shape'] == 'circle':
+                    pygame.draw.circle(screen, enemy['color'], (enemy['x'] + enemy['size'] // 2, enemy['y'] + enemy['size'] // 2), enemy['size'] // 2)
+                elif enemy['shape'] == 'triangle':
+                    points = [
+                        (enemy['x'], enemy['y'] + enemy['size']),
+                        (enemy['x'] + enemy['size'], enemy['y'] + enemy['size']),
+                        (enemy['x'] + enemy['size'] // 2, enemy['y'])
+                    ]
+                    pygame.draw.polygon(screen, enemy['color'], points)
+
+    def move_enemies():
+        nonlocal enemy_direction, game_over
+        edge_reached = False
+        for row in enemies:
+            for enemy in row:
+                enemy['x'] += enemy_speed * enemy_direction
+                if enemy['x'] <= 0 or enemy['x'] + enemy['size'] >= WIDTH:
+                    edge_reached = True
+
+        if edge_reached:
+            enemy_direction *= -1
+            for row in enemies:
+                for enemy in row:
+                    enemy['y'] += enemy_y_down
+                    if enemy['y'] + enemy['size'] >= player_y:
+                        game_over = True
+
+    def handle_bullet_collisions():
+        nonlocal score
+        for bullet in bullets[:]:
+            for row in enemies:
+                for enemy in row[:]:
+                    if pygame.Rect(bullet.x, bullet.y, bullet_width, bullet_height).colliderect(pygame.Rect(enemy['x'], enemy['y'], enemy['size'], enemy['size'])):
+                        bullets.remove(bullet)
+                        row.remove(enemy)
+                        score += 10
+                        break
+
+    def reset_game():
+        """Reset the game to its initial state."""
+        nonlocal enemies, score, game_over
+        enemies = create_enemies()
+        game_over = False
+
+    while state == "game":
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    result = pause_menu()
+                    if result == "menu":
+                        state = "menu"
+                        return
+                elif event.key == pygame.K_SPACE:
+                    if not game_over:
+                        bullets.append(pygame.Rect(player_x + player_width // 2 - bullet_width // 2,
+                                                   player_y - bullet_height, bullet_width, bullet_height))
+
+        keys = pygame.key.get_pressed()
+        if not game_over:
+            if keys[pygame.K_LEFT] and player_x > 0:
+                player_x -= player_speed
+            if keys[pygame.K_RIGHT] and player_x + player_width < WIDTH:
+                player_x += player_speed
+
+        # Update bullets
+        if not game_over:
+            bullets = [bullet.move(0, bullet_speed) for bullet in bullets if bullet.y > 0]
+
+            # Check collisions
+            handle_bullet_collisions()
+
+            # Move enemies
+            move_enemies()
+
+            # Check if all enemies are defeated
+            if all(not row for row in enemies):
+                reset_game()
+
+        # Drawing
+        screen.fill(BLACK)
+        draw_player()
+        draw_bullets()
+        draw_enemies()
+
+        # Display score
+        score_text = font.render(f"Score: {score}", True, WHITE)
+        screen.blit(score_text, (10, 10))
+
+        # Game Over screen
+        if game_over:
+            winner_text = f"Game Over! Score: {score}"
+            show_scoreboard(winner_text, space_game)
+            state = "menu"
+            return
+
+        pygame.display.flip()
+        clock.tick(60)
+
 
 def tictactoe_game():
     global state
