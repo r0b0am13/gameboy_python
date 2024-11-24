@@ -114,7 +114,7 @@ def show_scoreboard(final_score, retry_callback,custom):
         for i, option in enumerate(scoreboard_options):
             color = HIGHLIGHT if i == selected_option else WHITE
             text = get_scaled_font(int(HEIGHT * 0.07)).render(option, True, color)
-            screen.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT * 0.4 + i * 160))
+            screen.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT * 0.4 + i * 80))
         
         pygame.display.flip()
 
@@ -123,8 +123,7 @@ def dino_game():
     randlower = 20
     randupper = 60
     clock = pygame.time.Clock()
-    ground_y = HEIGHT - 100
-    dino_y = ground_y - 60  # Dino height is 60, place it above the ground
+    dino_y = HEIGHT - 100
     dino_velocity = 0
     gravity = 1.5
     is_jumping = False
@@ -134,10 +133,7 @@ def dino_game():
 
     min_distance = 300  # Minimum distance between consecutive obstacles
     spawn_timer = 0  # Timer to control obstacle spawning
-    spawn_interval = 60  # Initial spawn interval (frames)
-
-    # Colors
-      # Example color for the ground (brown)
+    spawn_interval = 60 # Initial spawn interval (frames)
 
     def retry():
         dino_game()  # Restart the game
@@ -154,6 +150,7 @@ def dino_game():
             pygame.draw.rect(surface, color, (x + px * pixel_size, y + py * pixel_size, pixel_size, pixel_size))
 
     def draw_pixelated_cactus(surface, x, y):
+    
         cactus_pixels = [
             (0, 0),                  # Top
             (0, 1),                  # Middle
@@ -186,19 +183,19 @@ def dino_game():
         if is_jumping:
             dino_y += dino_velocity
             dino_velocity += gravity
-            if keys[pygame.K_DOWN]:
-                dino_velocity += 10
-            if dino_y >= ground_y - 60:  # Adjust to Dino's height
-                dino_y = ground_y - 60
+            if(keys[pygame.K_DOWN]):
+                dino_velocity += 10 
+            if dino_y >= HEIGHT - 100:
+                dino_y = HEIGHT - 100
                 is_jumping = False
 
         # Spawn obstacles at intervals
         spawn_timer += 1
         if spawn_timer >= spawn_interval:
             spawn_timer = 0
-            if not obstacles or WIDTH - obstacles[-1][0] > min_distance - 100:
-                obstacles.append([WIDTH, ground_y - 60, False])  # Adjust obstacle height
-                spawn_interval = random.randint(randlower, randupper)  # Randomize spawn interval
+            if not obstacles or WIDTH - obstacles[-1][0] > min_distance-100:
+                obstacles.append([WIDTH, HEIGHT - 100, False])  # Add False to track if passed
+                spawn_interval = random.randint(randlower,randupper)  # Randomize spawn interval
 
         # Move and manage obstacles
         for obstacle in obstacles:
@@ -221,15 +218,12 @@ def dino_game():
         for obstacle in obstacles:
             obstacle_rect = pygame.Rect(obstacle[0], obstacle[1], 20, 60)  # Adjusted size for new Cactus
             if dino_rect.colliderect(obstacle_rect):
-                show_scoreboard(score, retry, False)
+                show_scoreboard(score, retry,False)
                 state = "menu"
                 return
 
         # Draw game
         screen.fill(BLACK)
-
-        # Draw ground
-        pygame.draw.rect(screen, BORDER_COLOR, (0, ground_y, WIDTH, 100))
 
         # Draw pixelated Dino
         draw_pixelated_dino(screen, 100, dino_y, WHITE)
@@ -245,7 +239,6 @@ def dino_game():
 
         pygame.display.flip()
         clock.tick(30)
-
 
 def snake_game():
     global state
@@ -336,11 +329,8 @@ def snake_game():
         score_text = font.render(f"Score: {score}", True, WHITE)
         screen.blit(score_text, (10, 10))
 
-        
-
-        
         if game_over:
-            show_scoreboard(score, snake_game,False)  # Allow retry by passing snake_game
+            show_scoreboard(score, snake_game)  # Allow retry by passing snake_game
             state = "menu"  # Go back to menu after showing scoreboard
             return
 
@@ -376,7 +366,9 @@ def tetris_game():
     game_over = False
 
     fall_speed = 500  # Milliseconds between automatic downward moves
+    move_speed = 100  # Milliseconds between horizontal/vertical moves
     last_fall_time = pygame.time.get_ticks()
+    last_move_time = pygame.time.get_ticks()
 
     def spawn_piece():
         return random.choice(TETROMINOES)
@@ -437,27 +429,34 @@ def tetris_game():
                     if result == "menu":
                         state = "menu"
                         return
-                if not game_over:
-                    if event.key == pygame.K_LEFT:
-                        new_position = [piece_position[0], piece_position[1] - 1]
-                        if not check_collision(current_piece, new_position):
-                            piece_position = new_position
-                    elif event.key == pygame.K_RIGHT:
-                        new_position = [piece_position[0], piece_position[1] + 1]
-                        if not check_collision(current_piece, new_position):
-                            piece_position = new_position
-                    elif event.key == pygame.K_DOWN:
-                        new_position = [piece_position[0] + 1, piece_position[1]]
-                        if not check_collision(current_piece, new_position):
-                            piece_position = new_position
-                    elif event.key == pygame.K_SPACE:
-                        rotated = list(zip(*current_piece[::-1]))
-                        if not check_collision(rotated, piece_position):
-                            current_piece = rotated
+                if not game_over and event.key == pygame.K_SPACE:
+                    # Rotate the piece once per keypress
+                    rotated = list(zip(*current_piece[::-1]))
+                    if not check_collision(rotated, piece_position):
+                        current_piece = rotated
+
+        keys = pygame.key.get_pressed()
+        current_time = pygame.time.get_ticks()
 
         if not game_over:
+            # Continuous movement for left, right, and down keys
+            if keys[pygame.K_LEFT] and current_time - last_move_time > move_speed:
+                new_position = [piece_position[0], piece_position[1] - 1]
+                if not check_collision(current_piece, new_position):
+                    piece_position = new_position
+                last_move_time = current_time
+            if keys[pygame.K_RIGHT] and current_time - last_move_time > move_speed:
+                new_position = [piece_position[0], piece_position[1] + 1]
+                if not check_collision(current_piece, new_position):
+                    piece_position = new_position
+                last_move_time = current_time
+            if keys[pygame.K_DOWN] and current_time - last_move_time > move_speed:
+                new_position = [piece_position[0] + 1, piece_position[1]]
+                if not check_collision(current_piece, new_position):
+                    piece_position = new_position
+                last_move_time = current_time
+
             # Timer-based downward movement
-            current_time = pygame.time.get_ticks()
             if current_time - last_fall_time > fall_speed:
                 last_fall_time = current_time
                 new_position = [piece_position[0] + 1, piece_position[1]]
@@ -480,12 +479,14 @@ def tetris_game():
 
         if game_over:
             winner_text = f"Game Over! Score: {score}"
-            show_scoreboard(winner_text, tetris_game,True)
+            show_scoreboard(winner_text, tetris_game, True)
             state = "menu"
             return
 
         pygame.display.flip()
-        clock.tick(60)
+        clock.tick(30)
+
+
 
 def space_game():
     global state
