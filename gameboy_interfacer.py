@@ -489,7 +489,6 @@ def tetris_game():
 
 def space_game():
     global state
-    WIDTH, HEIGHT = 800, 600
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     clock = pygame.time.Clock()
 
