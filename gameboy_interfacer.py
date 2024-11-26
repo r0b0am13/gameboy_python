@@ -623,6 +623,7 @@ def tictactoe_game():
     current_player = random.choice(["X", "O"])  # Randomly choose starter (X for Player, O for AI)
     game_over = False
     cursor_position = [0, 0]  
+
     def draw_winning_line(start, end):
         if start and end:
             start_pos = (
@@ -638,29 +639,37 @@ def tictactoe_game():
         pygame.time.wait(1000)
 
 
-    def check_winner():
+    def check_winner(fla):
       
         nonlocal game_over
 
         # Check rows
+        i = 0
+        j = 0
         for row in board:
             if row[0] == row[1] == row[2] != "":
-                draw_winning_line((0, row), (2, row))
+                if fla:
+                    draw_winning_line((0, i), (2, i))
                 return row[0]
+            i+=1
 
         # Check columns
         for col in range(BOARD_SIZE):
             if board[0][col] == board[1][col] == board[2][col] != "":
-                draw_winning_line((col, 0), (col, 2))
+                if fla:
+                    draw_winning_line((j, 0), (j, 2))
                 return board[0][col]
+            j+=1
 
         # Check diagonals
         if board[0][0] == board[1][1] == board[2][2] != "":
-            draw_winning_line((0, 0), (2, 2))
+            if fla:
+                draw_winning_line((0, 0), (2, 2))
             return board[0][0]
 
         if board[0][2] == board[1][1] == board[2][0] != "":
-            draw_winning_line((2, 0), (0, 2))
+            if fla:
+                draw_winning_line((2, 0), (0, 2))
             return board[0][2]
 
         # Check for draw
@@ -680,13 +689,13 @@ def tictactoe_game():
                 if board[row][col] == "":
                     # Simulate the AI making a move
                     board[row][col] = "O"
-                    if check_winner() == "O":
+                    if check_winner(0) == "O":
                         return
                     board[row][col] = ""  # Undo move
 
                     # Simulate the AI blocking the player's win
                     board[row][col] = "X"
-                    if check_winner() == "X":
+                    if check_winner(0) == "X":
                         board[row][col] = "O"
                         return
                     board[row][col] = ""  # Undo move
@@ -726,7 +735,7 @@ def tictactoe_game():
                             pygame.display.flip()
 
                             #pygame.time.wait(500)  # Wait for 500 ms
-                            winner = check_winner()
+                            winner = check_winner(1)
                             if winner:
                                 game_over = True
                                 
@@ -772,7 +781,7 @@ def tictactoe_game():
             draw_board_and_pieces()  # Function to draw the grid and pieces (explained below)
             pygame.display.flip()    # Ensure the move is displayed
             pygame.time.wait(1000)    # Wait after showing the move
-            winner = check_winner()
+            winner = check_winner(1)
             if winner:
                 game_over = True
                 
