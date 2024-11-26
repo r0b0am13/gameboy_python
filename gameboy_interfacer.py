@@ -884,7 +884,7 @@ while state == "menu":
 
             # Display Game Name
             game_name_text = game_font.render(game["name"], True, icon_color)
-            screen.blit(game_name_text, (start_x + i * game_spacing - game_name_text.get_width() // 2, HEIGHT * 0.55))
+            screen.blit(game_name_text, (start_x + i * game_spacing - game_name_text.get_width() // 2, 20+HEIGHT * 0.55))
 
     # Draw Quit Option (Always visible at the bottom)
     quit_font = get_scaled_font(int(HEIGHT * 0.07))
