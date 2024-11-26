@@ -490,7 +490,7 @@ def tetris_game():
 
 
 
-def flappy_bird():
+def rubberducky():
     global state
     gravity = 0.7
     bird_y = HEIGHT // 2
@@ -506,9 +506,11 @@ def flappy_bird():
 
     # Load bird image
     bird_img = pygame.image.load('bird.png')  # Replace with the path to your bird PNG
-    bird_img = pygame.transform.scale(bird_img, (60, 40))
+    bird_img = pygame.transform.flip(bird_img, True, False)  # Flip the bird image
+    bird_img = pygame.transform.scale(bird_img, (50, 50))  # Resize the image
+
     def retry():
-        flappy_bird()  # Restart the game
+        rubberducky()  # Restart the game
 
     def draw_pipe(surface, x, height, inverted=False,pipe_gap=200):
         pipe_color = GREEN
@@ -534,7 +536,7 @@ def flappy_bird():
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    result = pause_menu("flappy_bird")
+                    result = pause_menu("ducky")
                     if result == "menu":
                         state = "menu"
                         return  # Return to main menu
@@ -807,7 +809,7 @@ games = [
     {"name": "Dino Game", "func": dino_game, "icon": game_icons[0]},
     {"name": "Snake Game", "func": snake_game, "icon": game_icons[1]},
     {"name": "Tetris", "func": tetris_game , "icon": game_icons[2]},
-    {"name": "Flappy Bird", "func": flappy_bird, "icon": game_icons[3]},
+    {"name": "RubberDucky", "func": rubberducky, "icon": game_icons[3]},
     {"name": "Tic-Tac-Toe", "func": tictactoe_game, "icon": game_icons[4]},
 ]
 
@@ -846,10 +848,10 @@ def help(state,game=None):
                     "Avoid hitting the walls or yourself.",
                     "More food you eat, higher your score."
                 ]
-            elif game == "flappy_bird":
+            elif game == "ducky":
                 text_lines = [
-                    "Flappy Bird",
-                    "Press Space to flap while gravity pulls you down.",
+                    "Rubber Ducky",
+                    "Press Space to go up while gravity pulls you down.",
                     "Avoid obstacles to keep flying.",
                     "Score points by passing through gaps."
                 ]
@@ -920,7 +922,7 @@ while state == "menu":
 
             # Display Game Name
             game_name_text = game_font.render(game["name"], True, icon_color)
-            screen.blit(game_name_text, (start_x + i * game_spacing - game_name_text.get_width() // 2, 20+HEIGHT * 0.55))
+            screen.blit(game_name_text, (start_x + i * game_spacing - game_name_text.get_width() // 2, HEIGHT * 0.55))
 
     # Draw Quit Option (Always visible at the bottom)
     quit_font = get_scaled_font(int(HEIGHT * 0.07))
