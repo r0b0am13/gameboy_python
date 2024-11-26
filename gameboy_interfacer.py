@@ -29,7 +29,7 @@ BLACK = (0, 0, 0)
 BLUE = (0, 0, 255)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
-HIGHLIGHT = (255, 0, 0)
+HIGHLIGHT = (225, 225, 50)
 OBSTACLE_COLOR = (200, 200, 200)
 CYAN = (0, 255, 255)
 ORANGE = (255, 165, 0)
@@ -50,7 +50,7 @@ game_icons = [
     load_icon('dino_icon.png', 100, 100),  # Dino Game icon
     load_icon('snake_icon.png', 100, 100),  # Game 1 icon
     load_icon('tetris_icon.png', 100, 100),  # Game 2 icon
-    load_icon('bird.png', 100, 100),  # Game 3 icon
+    load_icon('bird.png', 120, 80),  # Game 3 icon
     load_icon('tictactoe_icon.png', 100, 100),  # Game 4 icon
 ]
 
@@ -699,7 +699,7 @@ def tictactoe_game():
                         cursor_position[1] = (cursor_position[1] - 1) % BOARD_SIZE
                     elif event.key == pygame.K_RIGHT:
                         cursor_position[1] = (cursor_position[1] + 1) % BOARD_SIZE
-                    elif event.key == pygame.K_RETURN:
+                    elif (event.key == pygame.K_RETURN) or (event.key == pygame.K_SPACE):
                         row, col = cursor_position
                         if board[row][col] == "":
                             board[row][col] = current_player
