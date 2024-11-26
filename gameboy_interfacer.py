@@ -329,8 +329,15 @@ def snake_game():
 def tetris_game():
     global state
     GRID_SIZE = 30  # Size of each block
-    COLS = WIDTH // GRID_SIZE
+    PLAYABLE_WIDTH = 800 if WIDTH >= 800 else WIDTH  # Adjust playable width based on screen size
+    PLAYABLE_COLS = PLAYABLE_WIDTH // GRID_SIZE
+    PLAYABLE_START_X = (WIDTH - PLAYABLE_WIDTH) // 2
+    BORDER_COLOR = (50, 50, 50)  # Define a border color
+
+    # Update ROWS and COLS to consider only the playable part
+    COLS = PLAYABLE_COLS
     ROWS = HEIGHT // GRID_SIZE
+
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     clock = pygame.time.Clock()
 
@@ -363,22 +370,29 @@ def tetris_game():
         return random.choice(TETROMINOES)
 
     def draw_grid():
+        # Draw the non-playable border areas
+        screen.fill(BORDER_COLOR)
+        pygame.draw.rect(screen, (0, 0, 0), (PLAYABLE_START_X, 0, PLAYABLE_WIDTH, HEIGHT))
+
+        # Draw the grid within the playable area
         for row in range(ROWS):
             for col in range(COLS):
                 if grid[row][col] != 0:
                     pygame.draw.rect(screen, COLORS[grid[row][col] - 1],
-                                     (col * GRID_SIZE, row * GRID_SIZE, GRID_SIZE, GRID_SIZE))
+                                     (PLAYABLE_START_X + col * GRID_SIZE, row * GRID_SIZE, GRID_SIZE, GRID_SIZE))
                     pygame.draw.rect(screen, (0, 0, 0),
-                                     (col * GRID_SIZE, row * GRID_SIZE, GRID_SIZE, GRID_SIZE), 2)
+                                     (PLAYABLE_START_X + col * GRID_SIZE, row * GRID_SIZE, GRID_SIZE, GRID_SIZE), 2)
 
     def draw_piece(piece, position):
         for i, row in enumerate(piece):
             for j, cell in enumerate(row):
                 if cell != 0:
                     pygame.draw.rect(screen, COLORS[cell - 1],
-                                     ((position[1] + j) * GRID_SIZE, (position[0] + i) * GRID_SIZE, GRID_SIZE, GRID_SIZE))
+                                     (PLAYABLE_START_X + (position[1] + j) * GRID_SIZE,
+                                      (position[0] + i) * GRID_SIZE, GRID_SIZE, GRID_SIZE))
                     pygame.draw.rect(screen, (0, 0, 0),
-                                     ((position[1] + j) * GRID_SIZE, (position[0] + i) * GRID_SIZE, GRID_SIZE, GRID_SIZE), 2)
+                                     (PLAYABLE_START_X + (position[1] + j) * GRID_SIZE,
+                                      (position[0] + i) * GRID_SIZE, GRID_SIZE, GRID_SIZE), 2)
 
     def check_collision(piece, position):
         for i, row in enumerate(piece):
@@ -458,7 +472,6 @@ def tetris_game():
                 else:
                     piece_position = new_position
 
-        screen.fill((0, 0, 0))
         draw_grid()
         draw_piece(current_piece, piece_position)
 
@@ -913,6 +926,3 @@ while state == "menu":
                         sys.exit()
                     else:
                         help(state)
-                        
-                        
-
