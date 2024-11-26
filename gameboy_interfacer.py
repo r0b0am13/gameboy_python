@@ -36,8 +36,9 @@ ORANGE = (255, 165, 0)
 YELLOW = (255, 255, 0)
 PURPLE = (128, 0, 128)
 DARK_GREEN = (21,71,52)
-BORDER_COLOR = (50,50,50)
+BORDER_COLOR = (194, 178, 128)
 SKY_BLUE = (135, 206, 235)
+
 
 # Load game icons (ensure you have these images in the correct directory)
 def load_icon(image_path, width, height):
@@ -118,6 +119,12 @@ def show_scoreboard(final_score, retry_callback,custom):
             screen.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT * 0.4 + i * 80))
         
         pygame.display.flip()
+# Load and scale images to 3 blocks size (60x60 pixels)
+dino_img = pygame.image.load('dino_icon.png')
+cactus_img = pygame.image.load('cactus.png')
+
+dino_img = pygame.transform.scale(dino_img, (60, 60))  # 3 blocks wide and tall
+cactus_img = pygame.transform.scale(cactus_img, (60, 60))
 
 def dino_game():
     global state
@@ -125,44 +132,20 @@ def dino_game():
     randupper = 60
     clock = pygame.time.Clock()
     ground_y = HEIGHT - 100
-    dino_y = ground_y - 60  # Dino height is 60, place it above the ground
+    dino_y = ground_y - 60  # Adjusted for Dino height
     dino_velocity = 0
     gravity = 1.5
-    is_jumping = False
+    is_jumping = False  
     obstacles = []  # List to store obstacle positions
-    obstacle_speed = 15
+    obstacle_speed = 10  # Starting speed
     score = 0
 
     min_distance = 300  # Minimum distance between consecutive obstacles
-    spawn_timer = 0  # Timer to control obstacle spawning
-    spawn_interval = 60  # Initial spawn interval (frames)
-
+    spawn_timer = 0
+    spawn_interval = 60
 
     def retry():
         dino_game()  # Restart the game
-
-    def draw_pixelated_dino(surface, x, y, color):
-        dino_pixels = [
-            (0, 0), (1, 0),         # Top row (head)
-            (0, 1),                 # Body
-            (0, 2), (1, 2)          # Legs
-        ]
-        pixel_size = 20  # Increase size for better visibility
-
-        for px, py in dino_pixels:
-            pygame.draw.rect(surface, color, (x + px * pixel_size, y + py * pixel_size, pixel_size, pixel_size))
-
-    def draw_pixelated_cactus(surface, x, y):
-        cactus_pixels = [
-            (0, 0),                  # Top
-            (0, 1),                  # Middle
-            (0, 2)                   # Base
-        ]
-        pixel_size = 20  # Larger cactus pixels
-
-        for px, py in cactus_pixels:
-            color = DARK_GREEN if py % 2 == 0 else GREEN  # Alternate colors for texture
-            pygame.draw.rect(surface, color, (x + px * pixel_size, y + py * pixel_size, pixel_size, pixel_size))
 
     while state == "game":
         for event in pygame.event.get():
@@ -171,79 +154,75 @@ def dino_game():
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    result = pause_menu()
+                    result = pause_menu()  # Call pause menu if defined
                     if result == "menu":
                         state = "menu"
-                        return  # Return to main menu
+                        return
 
         # Game Logic
         keys = pygame.key.get_pressed()
         if (keys[pygame.K_SPACE] or keys[pygame.K_UP]) and not is_jumping:
             is_jumping = True
-            dino_velocity = -30
+            dino_velocity = -25  # Jump strength
 
         if is_jumping:
             dino_y += dino_velocity
             dino_velocity += gravity
-            if keys[pygame.K_DOWN]:
-                dino_velocity += 10
-            if dino_y >= ground_y - 60:  # Adjust to Dino's height
+            if keys[pygame.K_DOWN]:  # Fast fall
+                dino_velocity += 5
+            if dino_y >= ground_y - 60: 
                 dino_y = ground_y - 60
                 is_jumping = False
 
-        # Spawn obstacles at intervals
+        # Spawn and move obstacles
         spawn_timer += 1
         if spawn_timer >= spawn_interval:
             spawn_timer = 0
             if not obstacles or WIDTH - obstacles[-1][0] > min_distance - 100:
-                obstacles.append([WIDTH, ground_y - 60, False])  # Adjust obstacle height
-                spawn_interval = random.randint(randlower, randupper)  # Randomize spawn interval
+                obstacles.append([WIDTH, ground_y - 60, False])  # False indicates not passed yet
+                spawn_interval = random.randint(randlower, randupper)
 
-        # Move and manage obstacles
         for obstacle in obstacles:
-            obstacle[0] -= obstacle_speed  # Move obstacle to the left
+            obstacle[0] -= obstacle_speed  # Move obstacles left
 
-            # Update score if obstacle passed the Dino
-            if obstacle[0] + 50 < 100 and not obstacle[2]:
+            # Update score if Dino passes the obstacle
+            if obstacle[0] + 60 < 100 and not obstacle[2]:
                 score += 1
-                obstacle[2] = True  # Mark as passed to avoid double counting
+                obstacle[2] = True  # Mark as passed
 
         # Remove off-screen obstacles
-        obstacles = [obs for obs in obstacles if obs[0] > -50]
+        obstacles = [obs for obs in obstacles if obs[0] > -60]
 
         # Increase speed gradually based on score
-        if score % 5 == 0 and score > 0:
-            obstacle_speed += 0.1  # Smooth speed increase
+        if score > 0 and score % 5 == 0:
+            obstacle_speed += 0.01  # Smooth speed increase
 
         # Collision detection
-        dino_rect = pygame.Rect(100, dino_y, 40, 60)  # Adjusted size for new Dino
+        dino_rect = pygame.Rect(100, dino_y, 60, 60)  # Dino rectangle
         for obstacle in obstacles:
-            obstacle_rect = pygame.Rect(obstacle[0], obstacle[1], 20, 60)  # Adjusted size for new Cactus
+            obstacle_rect = pygame.Rect(obstacle[0], obstacle[1], 60, 60)
             if dino_rect.colliderect(obstacle_rect):
-                show_scoreboard(score, retry, False)
+                show_scoreboard(score, retry, False)  # Call scoreboard
                 state = "menu"
                 return
 
-        # Draw game
+        # Draw game elements
         screen.fill(BLACK)
+        pygame.draw.rect(screen, BORDER_COLOR, (0, ground_y, WIDTH, 100))  # Ground
 
-        # Draw ground
-        pygame.draw.rect(screen, BORDER_COLOR, (0, ground_y, WIDTH, 100))
-
-        # Draw pixelated Dino
-        draw_pixelated_dino(screen, 100, dino_y, WHITE)
-
-        # Draw pixelated Cactus obstacles
+        # Draw Dino and obstacles
+        screen.blit(dino_img, (100, dino_y))  # Draw scaled Dino
         for obstacle in obstacles:
-            draw_pixelated_cactus(screen, obstacle[0], obstacle[1])
+            screen.blit(cactus_img, (obstacle[0], obstacle[1]))  # Draw scaled Cactus
 
         # Display score
-        font = get_scaled_font(int(HEIGHT * 0.05))
+        font = pygame.font.Font(None, 36)
         score_text = font.render(f"Score: {score}", True, WHITE)
         screen.blit(score_text, (10, 10))
 
         pygame.display.flip()
         clock.tick(30)
+
 
 
 def snake_game():
