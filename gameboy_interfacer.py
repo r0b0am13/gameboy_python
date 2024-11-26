@@ -2,17 +2,7 @@ import pygame
 import sys
 import random 
 
-"""
 
-Current Status :
-
-Added a layered approach for UI.
-Main Screen (Game Selection Screen) is resizable. Pause Menu and Game Menu is not resizable.
-Added modularized codes for a pause menu and scoreboard.
-
-Suggest checking out all the screens.
-
-"""
 # Initialize Pygame
 pygame.init()
 pygame.mouse.set_visible(False)
@@ -252,7 +242,6 @@ def snake_game():
     game_over = False
 
     def place_food():
-        """Randomly place the food, ensuring it does not overlap with the snake or border."""
         while True:
             new_food = [random.randint(1, (WIDTH // GRID_SIZE) - 2),
                         random.randint(1, (HEIGHT // GRID_SIZE) - 2)]
@@ -281,7 +270,7 @@ def snake_game():
                         direction = [1, 0]
 
         if not game_over:
-            # Move the snake
+
             new_head = [snake[0][0] + direction[0], snake[0][1] + direction[1]]
             snake.insert(0, new_head)
 
@@ -486,7 +475,7 @@ def tetris_game():
 
 
 
-def flappy_bird():
+def rubberducky():
     global state
     gravity = 0.5
     bird_y = HEIGHT // 2
@@ -506,7 +495,7 @@ def flappy_bird():
     bird_img = pygame.transform.scale(bird_img, (50, 50))  # Resize the image
 
     def retry():
-        flappy_bird()  # Restart the game
+        rubberducky()  # Restart the game
 
     def draw_pipe(surface, x, height, inverted=False,pipe_gap=200):
         pipe_color = GREEN
@@ -532,7 +521,7 @@ def flappy_bird():
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    result = pause_menu("flappy")
+                    result = pause_menu("ducky")
                     if result == "menu":
                         state = "menu"
                         return  # Return to main menu
@@ -769,7 +758,7 @@ games = [
     {"name": "Dino Game", "func": dino_game, "icon": game_icons[0]},
     {"name": "Snake Game", "func": snake_game, "icon": game_icons[1]},
     {"name": "Tetris", "func": tetris_game , "icon": game_icons[2]},
-    {"name": "Flappy Bird", "func": flappy_bird, "icon": game_icons[3]},
+    {"name": "RubberDucky", "func": rubberducky, "icon": game_icons[3]},
     {"name": "Tic-Tac-Toe", "func": tictactoe_game, "icon": game_icons[4]},
 ]
 
@@ -808,10 +797,10 @@ def help(state,game=None):
                     "Avoid hitting the walls or yourself.",
                     "More food you eat, higher your score."
                 ]
-            elif game == "flappy":
+            elif game == "ducky":
                 text_lines = [
-                    "Flappy Bird Instructions:",
-                    "Press Space to flap.",
+                    "Rubber Ducky Instructions:",
+                    "Press Space to go up while gravity pulls you down.",
                     "Avoid obstacles to keep flying.",
                     "Score points by passing through gaps."
                 ]
