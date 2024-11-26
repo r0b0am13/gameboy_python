@@ -58,8 +58,8 @@ game_icons = [
 def get_scaled_font(size):
     return pygame.font.Font(None, size)
 
-def pause_menu():
-    pause_options = ["Resume", "Return to Main Menu"]
+def pause_menu(game):
+    pause_options = ["Resume", "Return to Main Menu", "Help"]
     selected_pause_option = 0
     
     while True:
@@ -78,12 +78,22 @@ def pause_menu():
                         return "resume"
                     elif pause_options[selected_pause_option] == "Return to Main Menu":
                         return "menu"
+                    elif pause_options[selected_pause_option] == "Help":
+                        help("game",game)
         
-        pause_font = get_scaled_font(int(HEIGHT * 0.07))
-        for i, option in enumerate(pause_options):
+        pause_font = get_scaled_font(int(HEIGHT * 0.08))
+        total_text_height = len(pause_options) * pause_font.get_height()  # Total height of all lines
+        start_y = (HEIGHT) / 2 - total_text_height + HEIGHT * 0.1  # Adjust start position to center vertically below title
+
+        for i, line in enumerate(pause_options):
             color = HIGHLIGHT if i == selected_pause_option else WHITE
-            text = pause_font.render(option, True, color)
-            screen.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT * 0.4 + i * 60))
+            text_surface = pause_font.render(line, True, color)
+            text_rect = text_surface.get_rect(center=(WIDTH / 2, start_y + i * (pause_font.get_height() + 25*HEIGHT/800) ))  # Each line below the previous one
+            screen.blit(text_surface, text_rect)
+            
+            
+            
+        
         
         pygame.display.flip()
         
@@ -120,13 +130,16 @@ def show_scoreboard(final_score, retry_callback,custom):
         
         pygame.display.flip()
 # Load and scale images to 3 blocks size (60x60 pixels)
-dino_img = pygame.image.load('dino_icon.png')
-cactus_img = pygame.image.load('cactus.png')
 
-dino_img = pygame.transform.scale(dino_img, (60, 60))  # 3 blocks wide and tall
-cactus_img = pygame.transform.scale(cactus_img, (60, 60))
 
 def dino_game():
+    
+    block_size = 60*WIDTH/1000
+    dino_img = pygame.image.load('dino_icon.png')
+    cactus_img = pygame.image.load('cactus.png')
+
+    dino_img = pygame.transform.scale(dino_img, (block_size, 60))  # 3 blocks wide and tall
+    cactus_img = pygame.transform.scale(cactus_img, (60, 60))
     global state
     randlower = 20
     randupper = 60
@@ -134,7 +147,7 @@ def dino_game():
     ground_y = HEIGHT - 100
     dino_y = ground_y - 60  # Adjusted for Dino height
     dino_velocity = 0
-    gravity = 1.5
+    gravity = 2*WIDTH/800
     is_jumping = False  
     obstacles = []  # List to store obstacle positions
     obstacle_speed = 10  # Starting speed
@@ -154,7 +167,7 @@ def dino_game():
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    result = pause_menu()  # Call pause menu if defined
+                    result = pause_menu("dino")  # Call pause menu if defined
                     if result == "menu":
                         state = "menu"
                         return
@@ -163,7 +176,7 @@ def dino_game():
         keys = pygame.key.get_pressed()
         if (keys[pygame.K_SPACE] or keys[pygame.K_UP]) and not is_jumping:
             is_jumping = True
-            dino_velocity = -25  # Jump strength
+            dino_velocity = -25*WIDTH/800  # Jump strength
 
         if is_jumping:
             dino_y += dino_velocity
@@ -227,7 +240,7 @@ def dino_game():
 
 def snake_game():
     global state
-    GRID_SIZE = 30  # Size of each grid cell
+    GRID_SIZE = int(30*WIDTH/1080)  # Size of each grid cell
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     clock = pygame.time.Clock()
 
@@ -253,7 +266,7 @@ def snake_game():
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    result = pause_menu()
+                    result = pause_menu("snake")
                     if result == "menu":
                         state = "menu"
                         return
@@ -410,7 +423,7 @@ def tetris_game():
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    result = pause_menu()
+                    result = pause_menu("tetris")
                     if result == "menu":
                         state = "menu"
                         return
@@ -475,26 +488,27 @@ def tetris_game():
 
 def flappy_bird():
     global state
-    gravity = 0.75
+    gravity = 0.5
     bird_y = HEIGHT // 2
     bird_velocity = 0
-    flap_strength = -12
+    flap_strength = -10
     pipes = []  # List to store pipe positions
     pipe_speed = 5
-    pipe_gap = 200  # Gap between top and bottom pipes
+    pipe_gap = 200
     score = 0
     spawn_timer = 0
-    spawn_interval = 160
+    spawn_interval = 120
     clock = pygame.time.Clock()
 
     # Load bird image
     bird_img = pygame.image.load('bird.png')  # Replace with the path to your bird PNG
+    bird_img = pygame.transform.flip(bird_img, True, False)  # Flip the bird image
     bird_img = pygame.transform.scale(bird_img, (50, 50))  # Resize the image
 
     def retry():
         flappy_bird()  # Restart the game
 
-    def draw_pipe(surface, x, height, inverted=False):
+    def draw_pipe(surface, x, height, inverted=False,pipe_gap=200):
         pipe_color = GREEN
         outline_color = BLACK
         pipe_width = 80
@@ -518,7 +532,7 @@ def flappy_bird():
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    result = pause_menu()
+                    result = pause_menu("flappy")
                     if result == "menu":
                         state = "menu"
                         return  # Return to main menu
@@ -541,6 +555,7 @@ def flappy_bird():
             return
 
         # Spawn pipes at intervals
+        
         spawn_timer += 1
         if spawn_timer >= spawn_interval:
             spawn_timer = 0
@@ -557,7 +572,8 @@ def flappy_bird():
                 pipe[2] = True  # Mark as passed
 
         # Gradually increase pipe speed based on score
-        pipe_speed = 10 + score // 5  # Increase speed every 5 points
+        pipe_speed = 10 + score // 5
+        spawn_interval = spawn_interval - score // 5
 
         # Remove off-screen pipes
         pipes = [pipe for pipe in pipes if pipe[0] > -80]
@@ -580,8 +596,8 @@ def flappy_bird():
 
         # Draw pipes
         for pipe in pipes:
-            draw_pipe(screen, pipe[0], pipe[1], inverted=True)  # Top pipe
-            draw_pipe(screen, pipe[0], pipe[1])  # Bottom pipe
+            draw_pipe(screen, pipe[0], pipe[1], inverted=True,pipe_gap=pipe_gap)  # Top pipe
+            draw_pipe(screen, pipe[0], pipe[1],pipe_gap = pipe_gap)  # Bottom pipe
 
         # Display score
         font = get_scaled_font(int(HEIGHT * 0.05))
@@ -669,7 +685,7 @@ def tictactoe_game():
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    result = pause_menu()
+                    result = pause_menu("tictactoe")
                     if result == "menu":
                         state = "menu"
                         return  # Return to main menu
@@ -757,13 +773,89 @@ games = [
     {"name": "Tic-Tac-Toe", "func": tictactoe_game, "icon": game_icons[4]},
 ]
 
+def help(state,game=None):
+    while True:
+        for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        return
+        if state == "menu":
+            text_lines = [
+                "Welcome to the Gameboy!",
+                "Use arrow keys to navigate the menu.",
+                "Press Enter to select an option",
+                "Press Escape in-game to view the pause menu.",
+                "Help for games is available in pause menu.",
+            ]
+        elif state == "game":
+            if game == "dino":
+                text_lines = [
+                    "Dino Game Instructions:",
+                    "Press Space or Up Arrow to jump.",
+                    "Press Down Arrow while falling to fast fall.",
+                    "Avoid obstacles to score points.",
+                    "Pressing Left Arrow or Right Arrow does nothing.",
+                    
+                ]
+            elif game == "snake":
+                text_lines = [
+                    "Snake Game Instructions:",
+                    "Use arrow keys to move the snake.",
+                    "Eat food to grow longer.",
+                    "Avoid hitting the walls or yourself.",
+                    "More food you eat, higher your score."
+                ]
+            elif game == "flappy":
+                text_lines = [
+                    "Flappy Bird Instructions:",
+                    "Press Space to flap.",
+                    "Avoid obstacles to keep flying.",
+                    "Score points by passing through gaps."
+                ]
+            elif game == "tetris":
+                text_lines = [
+                    "Tetris Instructions:",
+                    "Use arrow keys to move blocks.",
+                    "Press Space to rotate blocks.",
+                    "Complete rows to score points."
+                ]
+            elif game == "tictactoe":
+                text_lines = [
+                    "Tic-Tac-Toe Instructions:",
+                    "Use arrow keys to select a cell.",
+                    "Press Enter or Space to place your mark.",
+                    "First to get three in a row wins!"
+                ]
+            else:
+                text_lines = ["Invalid game selected!"]
+        screen.fill(BLACK)
+        title_font = get_scaled_font(int(HEIGHT * 0.08))
+        content_font = get_scaled_font(int(HEIGHT * 0.06))
+        
+        title_surface = title_font.render("Help ", True, WHITE)
+        title_rect = title_surface.get_rect(center=(WIDTH / 2, HEIGHT * 0.1))  # Title at 10% from top
+        screen.blit(title_surface, title_rect)
+        
+        total_text_height = len(text_lines) * content_font.get_height()  # Total height of all lines
+        start_y = (HEIGHT) / 2 - total_text_height + HEIGHT * 0.1  # Adjust start position to center vertically below title
 
+        for i, line in enumerate(text_lines):
+            text_surface = content_font.render(line, True, WHITE if i==0 else HIGHLIGHT)
+            text_rect = text_surface.get_rect(center=(WIDTH / 2, start_y + i * (content_font.get_height() + 10) - (50 if i==0 else 0)))  # Each line below the previous one
+            screen.blit(text_surface, text_rect)
+   
+       
+        pygame.display.flip()
+        pygame.time.Clock().tick(30) # Limit to 30 FPS
 
 state = "menu"
 selected_game = 0
-selected_option = 0  # 0 for games, 1 for quit
+selected_option = 0
+quit_selected = True
 
-# Main loop
 while state == "menu":
     screen.fill(BLACK)
     WIDTH, HEIGHT = screen.get_size()
@@ -794,10 +886,14 @@ while state == "menu":
 
     # Draw Quit Option (Always visible at the bottom)
     quit_font = get_scaled_font(int(HEIGHT * 0.07))
-    quit_text = quit_font.render("Quit", True, HIGHLIGHT if selected_option == 1 else WHITE)
-    screen.blit(quit_text, (WIDTH // 2 - quit_text.get_width() // 2, HEIGHT * 0.85))  # Placing at 85% of the height
+    quit_text = quit_font.render("Quit", True, HIGHLIGHT if (selected_option == 1 and quit_selected)  else WHITE)
+    screen.blit(quit_text, (WIDTH // 2 - quit_text.get_width() - 100, HEIGHT * 0.85))
+    help_font = get_scaled_font(int(HEIGHT * 0.07))
+    help_text = help_font.render("Help", True, HIGHLIGHT if (selected_option == 1 and not quit_selected)  else WHITE)
+    screen.blit(help_text, (WIDTH // 2 - quit_text.get_width() + 100*WIDTH/800, HEIGHT * 0.85))# Placing at 85% of the height
 
     pygame.display.flip()
+    pygame.time.Clock().tick(30)  # Limit to 30 FPS
 
     # Handle Input
     for event in pygame.event.get():
@@ -809,10 +905,8 @@ while state == "menu":
                 selected_game = (selected_game - 1) % len(games)
             elif event.key == pygame.K_RIGHT and selected_option == 0:
                 selected_game = (selected_game + 1) % len(games)
-            elif event.key == pygame.K_LEFT and selected_option == 1:
-                selected_game,selected_option = len(games)-1 , 0
-            elif event.key == pygame.K_RIGHT and selected_option == 1:
-                selected_game,selected_option = 0 , 0
+            elif (event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT) and selected_option == 1:
+                quit_selected = not quit_selected
             elif event.key == pygame.K_DOWN or event.key == pygame.K_UP:
                 if (selected_option == 1):
                     selected_option = 0
@@ -823,5 +917,11 @@ while state == "menu":
                     state = "game"
                     games[selected_game]["func"]()
                 elif selected_option == 1:
-                    pygame.quit()
-                    sys.exit()
+                    if(quit_selected):
+                        pygame.quit()
+                        sys.exit()
+                    else:
+                        help(state)
+                        
+                        
+
