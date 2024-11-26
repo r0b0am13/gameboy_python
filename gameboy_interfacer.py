@@ -490,7 +490,7 @@ def tetris_game():
 
 
 
-def rubberducky():
+def flappy_bird():
     global state
     gravity = 0.7
     bird_y = HEIGHT // 2
@@ -506,11 +506,9 @@ def rubberducky():
 
     # Load bird image
     bird_img = pygame.image.load('bird.png')  # Replace with the path to your bird PNG
-    bird_img = pygame.transform.flip(bird_img, True, False)  # Flip the bird image
-    bird_img = pygame.transform.scale(bird_img, (50, 50))  # Resize the image
-
+    bird_img = pygame.transform.scale(bird_img, (60, 40))
     def retry():
-        rubberducky()  # Restart the game
+        flappy_bird()  # Restart the game
 
     def draw_pipe(surface, x, height, inverted=False,pipe_gap=200):
         pipe_color = GREEN
@@ -536,7 +534,7 @@ def rubberducky():
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    result = pause_menu("ducky")
+                    result = pause_menu("flappy_bird")
                     if result == "menu":
                         state = "menu"
                         return  # Return to main menu
@@ -625,7 +623,7 @@ def tictactoe_game():
     current_player = random.choice(["X", "O"])  # Randomly choose starter (X for Player, O for AI)
     game_over = False
     cursor_position = [0, 0]  
-    
+
     def check_winner():
       
         nonlocal game_over
@@ -707,9 +705,6 @@ def tictactoe_game():
                         row, col = cursor_position
                         if board[row][col] == "":
                             board[row][col] = current_player
-                            pygame.display.flip()
-
-                            #pygame.time.wait(500)  # Wait for 500 ms
                             winner = check_winner()
                             if winner:
                                 game_over = True
@@ -719,43 +714,10 @@ def tictactoe_game():
                 if event.key == pygame.K_r:  # Reset game with 'R'
                     reset_game()
 
-        def draw_board_and_pieces():
-            # Draw grid lines
-            for x in range(1, BOARD_SIZE):
-                pygame.draw.line(screen, BLACK, (x * CELL_WIDTH, 0), (x * CELL_WIDTH, HEIGHT), LINE_WIDTH)
-            for y in range(1, BOARD_SIZE):
-                pygame.draw.line(screen, BLACK, (0, y * CELL_HEIGHT), (WIDTH, y * CELL_HEIGHT), LINE_WIDTH)
-
-            # Draw X and O
-            for row in range(BOARD_SIZE):
-                for col in range(BOARD_SIZE):
-                    if board[row][col] != "":
-                        text = font.render(board[row][col], True, BLUE if board[row][col] == "X" else RED)
-                        text_rect = text.get_rect(center=((col * CELL_WIDTH + CELL_WIDTH // 2),
-                                                        (row * CELL_HEIGHT + CELL_HEIGHT // 2)))
-                        screen.blit(text, text_rect)
-
-            # Highlight the current cursor position (if applicable)
-            if not game_over and current_player == "X":  # Highlight only for the player's turn
-                pygame.draw.rect(
-                    screen,
-                    RED, 
-                    (
-                        cursor_position[1] * CELL_WIDTH,
-                        cursor_position[0] * CELL_HEIGHT,
-                        CELL_WIDTH,
-                        CELL_HEIGHT,
-                    ),
-                    5,
-                )
-
         # AI's turn
         if not game_over and current_player == "O":
+            pygame.time.wait(500)  # Add a slight delay for AI's move
             ai_move()
-            screen.fill(WHITE)
-            draw_board_and_pieces()  # Function to draw the grid and pieces (explained below)
-            pygame.display.flip()    # Ensure the move is displayed
-            pygame.time.wait(1000)    # Wait after showing the move
             winner = check_winner()
             if winner:
                 game_over = True
@@ -809,7 +771,7 @@ games = [
     {"name": "Dino Game", "func": dino_game, "icon": game_icons[0]},
     {"name": "Snake Game", "func": snake_game, "icon": game_icons[1]},
     {"name": "Tetris", "func": tetris_game , "icon": game_icons[2]},
-    {"name": "RubberDucky", "func": rubberducky, "icon": game_icons[3]},
+    {"name": "Flappy Bird", "func": flappy_bird, "icon": game_icons[3]},
     {"name": "Tic-Tac-Toe", "func": tictactoe_game, "icon": game_icons[4]},
 ]
 
@@ -848,10 +810,10 @@ def help(state,game=None):
                     "Avoid hitting the walls or yourself.",
                     "More food you eat, higher your score."
                 ]
-            elif game == "ducky":
+            elif game == "flappy_bird":
                 text_lines = [
-                    "Rubber Ducky",
-                    "Press Space to go up while gravity pulls you down.",
+                    "Flappy Bird",
+                    "Press Space to flap while gravity pulls you down.",
                     "Avoid obstacles to keep flying.",
                     "Score points by passing through gaps."
                 ]
@@ -922,7 +884,7 @@ while state == "menu":
 
             # Display Game Name
             game_name_text = game_font.render(game["name"], True, icon_color)
-            screen.blit(game_name_text, (start_x + i * game_spacing - game_name_text.get_width() // 2, HEIGHT * 0.55))
+            screen.blit(game_name_text, (start_x + i * game_spacing - game_name_text.get_width() // 2, 20+HEIGHT * 0.55))
 
     # Draw Quit Option (Always visible at the bottom)
     quit_font = get_scaled_font(int(HEIGHT * 0.07))
