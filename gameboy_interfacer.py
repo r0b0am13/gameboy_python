@@ -489,7 +489,7 @@ def flappy_bird():
 
     # Load bird image
     bird_img = pygame.image.load('bird.png')  # Replace with the path to your bird PNG
-    bird_img = pygame.transform.scale(bird_img, (50, 50))  # Resize the image
+    bird_img = pygame.transform.scale(bird_img, (60, 40))  # Resize the image
 
     def retry():
         flappy_bird()  # Restart the game
