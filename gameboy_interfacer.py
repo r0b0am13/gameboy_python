@@ -623,6 +623,20 @@ def tictactoe_game():
     current_player = random.choice(["X", "O"])  # Randomly choose starter (X for Player, O for AI)
     game_over = False
     cursor_position = [0, 0]  
+    def draw_winning_line(start, end):
+        if start and end:
+            start_pos = (
+                start[0] * CELL_WIDTH + CELL_WIDTH // 2,
+                start[1] * CELL_HEIGHT + CELL_HEIGHT // 2,
+            )
+            end_pos = (
+                end[0] * CELL_WIDTH + CELL_WIDTH // 2,
+                end[1] * CELL_HEIGHT + CELL_HEIGHT // 2,
+            )
+            pygame.draw.line(screen, GREEN, start_pos, end_pos, LINE_WIDTH)
+        pygame.display.flip()    # Ensure the move is displayed
+        pygame.time.wait(1000)
+
 
     def check_winner():
       
@@ -631,18 +645,22 @@ def tictactoe_game():
         # Check rows
         for row in board:
             if row[0] == row[1] == row[2] != "":
+                draw_winning_line((0, row), (2, row))
                 return row[0]
 
         # Check columns
         for col in range(BOARD_SIZE):
             if board[0][col] == board[1][col] == board[2][col] != "":
+                draw_winning_line((col, 0), (col, 2))
                 return board[0][col]
 
         # Check diagonals
         if board[0][0] == board[1][1] == board[2][2] != "":
+            draw_winning_line((0, 0), (2, 2))
             return board[0][0]
 
         if board[0][2] == board[1][1] == board[2][0] != "":
+            draw_winning_line((2, 0), (0, 2))
             return board[0][2]
 
         # Check for draw
@@ -705,6 +723,9 @@ def tictactoe_game():
                         row, col = cursor_position
                         if board[row][col] == "":
                             board[row][col] = current_player
+                            pygame.display.flip()
+
+                            #pygame.time.wait(500)  # Wait for 500 ms
                             winner = check_winner()
                             if winner:
                                 game_over = True
@@ -714,10 +735,43 @@ def tictactoe_game():
                 if event.key == pygame.K_r:  # Reset game with 'R'
                     reset_game()
 
+        def draw_board_and_pieces():
+            # Draw grid lines
+            for x in range(1, BOARD_SIZE):
+                pygame.draw.line(screen, BLACK, (x * CELL_WIDTH, 0), (x * CELL_WIDTH, HEIGHT), LINE_WIDTH)
+            for y in range(1, BOARD_SIZE):
+                pygame.draw.line(screen, BLACK, (0, y * CELL_HEIGHT), (WIDTH, y * CELL_HEIGHT), LINE_WIDTH)
+
+            # Draw X and O
+            for row in range(BOARD_SIZE):
+                for col in range(BOARD_SIZE):
+                    if board[row][col] != "":
+                        text = font.render(board[row][col], True, BLUE if board[row][col] == "X" else RED)
+                        text_rect = text.get_rect(center=((col * CELL_WIDTH + CELL_WIDTH // 2),
+                                                        (row * CELL_HEIGHT + CELL_HEIGHT // 2)))
+                        screen.blit(text, text_rect)
+
+            # Highlight the current cursor position (if applicable)
+            if not game_over and current_player == "X":  # Highlight only for the player's turn
+                pygame.draw.rect(
+                    screen,
+                    RED, 
+                    (
+                        cursor_position[1] * CELL_WIDTH,
+                        cursor_position[0] * CELL_HEIGHT,
+                        CELL_WIDTH,
+                        CELL_HEIGHT,
+                    ),
+                    5,
+                )
+
         # AI's turn
         if not game_over and current_player == "O":
-            pygame.time.wait(500)  # Add a slight delay for AI's move
             ai_move()
+            screen.fill(WHITE)
+            draw_board_and_pieces()  # Function to draw the grid and pieces (explained below)
+            pygame.display.flip()    # Ensure the move is displayed
+            pygame.time.wait(1000)    # Wait after showing the move
             winner = check_winner()
             if winner:
                 game_over = True
