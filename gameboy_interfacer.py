@@ -477,10 +477,10 @@ def tetris_game():
 
 def rubberducky():
     global state
-    gravity = 0.5
+    gravity = 0.7
     bird_y = HEIGHT // 2
     bird_velocity = 0
-    flap_strength = -10
+    flap_strength = -9
     pipes = []  # List to store pipe positions
     pipe_speed = 5
     pipe_gap = 200
@@ -562,7 +562,7 @@ def rubberducky():
 
         # Gradually increase pipe speed based on score
         pipe_speed = 10 + score // 5
-        spawn_interval = spawn_interval - score // 5
+        spawn_interval = 120 - (score // 5)*5 if (spawn_interval>90) else 90
 
         # Remove off-screen pipes
         pipes = [pipe for pipe in pipes if pipe[0] > -80]
@@ -782,7 +782,7 @@ def help(state,game=None):
         elif state == "game":
             if game == "dino":
                 text_lines = [
-                    "Dino Game Instructions:",
+                    "Dino Game",
                     "Press Space or Up Arrow to jump.",
                     "Press Down Arrow while falling to fast fall.",
                     "Avoid obstacles to score points.",
@@ -791,7 +791,7 @@ def help(state,game=None):
                 ]
             elif game == "snake":
                 text_lines = [
-                    "Snake Game Instructions:",
+                    "Snake Game",
                     "Use arrow keys to move the snake.",
                     "Eat food to grow longer.",
                     "Avoid hitting the walls or yourself.",
@@ -799,21 +799,21 @@ def help(state,game=None):
                 ]
             elif game == "ducky":
                 text_lines = [
-                    "Rubber Ducky Instructions:",
+                    "Rubber Ducky",
                     "Press Space to go up while gravity pulls you down.",
                     "Avoid obstacles to keep flying.",
                     "Score points by passing through gaps."
                 ]
             elif game == "tetris":
                 text_lines = [
-                    "Tetris Instructions:",
+                    "Tetris",
                     "Use arrow keys to move blocks.",
                     "Press Space to rotate blocks.",
                     "Complete rows to score points."
                 ]
             elif game == "tictactoe":
                 text_lines = [
-                    "Tic-Tac-Toe Instructions:",
+                    "Tic-Tac-Toe",
                     "Use arrow keys to select a cell.",
                     "Press Enter or Space to place your mark.",
                     "First to get three in a row wins!"
