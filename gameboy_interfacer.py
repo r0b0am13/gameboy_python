@@ -26,8 +26,10 @@ ORANGE = (255, 165, 0)
 YELLOW = (255, 255, 0)
 PURPLE = (128, 0, 128)
 DARK_GREEN = (21,71,52)
-BORDER_COLOR = (194, 178, 128)
+BG_DINO = (194, 178, 128)
 SKY_BLUE = (135, 206, 235)
+BORDER_COLOR  = (50,50,50)
+
 
 
 # Load game icons (ensure you have these images in the correct directory)
@@ -211,7 +213,7 @@ def dino_game():
 
         # Draw game elements
         screen.fill(BLACK)
-        pygame.draw.rect(screen, BORDER_COLOR, (0, ground_y, WIDTH, 100))  # Ground
+        pygame.draw.rect(screen, BG_DINO, (0, ground_y, WIDTH, 100))  # Ground
 
         # Draw Dino and obstacles
         screen.blit(dino_img, (100, dino_y))  # Draw scaled Dino
