@@ -732,9 +732,9 @@ def tictactoe_game():
                         row, col = cursor_position
                         if board[row][col] == "":
                             board[row][col] = current_player
-                            pygame.display.flip()
-
-                            #pygame.time.wait(500)  # Wait for 500 ms
+                            screen.fill(WHITE)
+                            draw_board_and_pieces()  # Function to draw the grid and pieces (explained below)
+                            pygame.display.flip()    # Ensure the move is displayed
                             winner = check_winner(1)
                             if winner:
                                 game_over = True
