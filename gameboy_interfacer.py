@@ -29,7 +29,7 @@ BLACK = (0, 0, 0)
 BLUE = (0, 0, 255)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
-HIGHLIGHT = (255, 0, 0)
+HIGHLIGHT = (225, 225, 50)
 OBSTACLE_COLOR = (200, 200, 200)
 CYAN = (0, 255, 255)
 ORANGE = (255, 165, 0)
@@ -475,10 +475,10 @@ def tetris_game():
 
 def flappy_bird():
     global state
-    gravity = 0.75
+    gravity = 0.7
     bird_y = HEIGHT // 2
     bird_velocity = 0
-    flap_strength = -12
+    flap_strength = -9
     pipes = []  # List to store pipe positions
     pipe_speed = 5
     pipe_gap = 200  # Gap between top and bottom pipes
@@ -683,7 +683,7 @@ def tictactoe_game():
                         cursor_position[1] = (cursor_position[1] - 1) % BOARD_SIZE
                     elif event.key == pygame.K_RIGHT:
                         cursor_position[1] = (cursor_position[1] + 1) % BOARD_SIZE
-                    elif event.key == pygame.K_RETURN:
+                    elif (event.key == pygame.K_RETURN) or (event.key == pygame.K_SPACE):
                         row, col = cursor_position
                         if board[row][col] == "":
                             board[row][col] = current_player
