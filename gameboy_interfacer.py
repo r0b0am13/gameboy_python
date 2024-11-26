@@ -50,7 +50,7 @@ game_icons = [
     load_icon('dino_icon.png', 100, 100),  # Dino Game icon
     load_icon('snake_icon.png', 100, 100),  # Game 1 icon
     load_icon('tetris_icon.png', 100, 100),  # Game 2 icon
-    load_icon('bird.png', 100, 100),  # Game 3 icon
+    load_icon('bird.png', 120, 80),  # Game 3 icon
     load_icon('tictactoe_icon.png', 100, 100),  # Game 4 icon
 ]
 
