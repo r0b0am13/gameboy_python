@@ -9,7 +9,7 @@ Current Status :
 Added a layered approach for UI.
 Main Screen (Game Selection Screen) is resizable. Pause Menu and Game Menu is not resizable.
 Added modularized codes for a pause menu and scoreboard.
-Only Dino Game (Ultra basic) works Others dont really do anything.
+
 Suggest checking out all the screens.
 
 """
@@ -37,6 +37,7 @@ YELLOW = (255, 255, 0)
 PURPLE = (128, 0, 128)
 DARK_GREEN = (21,71,52)
 BORDER_COLOR = (50,50,50)
+SKY_BLUE = (135, 206, 235)
 
 # Load game icons (ensure you have these images in the correct directory)
 def load_icon(image_path, width, height):
@@ -48,7 +49,7 @@ game_icons = [
     load_icon('dino_icon.png', 100, 100),  # Dino Game icon
     load_icon('snake_icon.png', 100, 100),  # Game 1 icon
     load_icon('tetris_icon.png', 100, 100),  # Game 2 icon
-    load_icon('space_invaders_icon.png', 100, 100),  # Game 3 icon
+    load_icon('bird.png', 100, 100),  # Game 3 icon
     load_icon('tictactoe_icon.png', 100, 100),  # Game 4 icon
 ]
 
@@ -493,120 +494,43 @@ def tetris_game():
 
 
 
-def space_game():
+def flappy_bird():
     global state
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    gravity = 0.75
+    bird_y = HEIGHT // 2
+    bird_velocity = 0
+    flap_strength = -12
+    pipes = []  # List to store pipe positions
+    pipe_speed = 5
+    pipe_gap = 200  # Gap between top and bottom pipes
+    score = 0
+    spawn_timer = 0
+    spawn_interval = 160
     clock = pygame.time.Clock()
 
-    # Colors
-    WHITE = (255, 255, 255)
-    BLACK = (0, 0, 0)
-    RED = (255, 0, 0)
-    GREEN = (0, 255, 0)
-    BLUE = (0, 0, 255)
-    YELLOW = (255, 255, 0)
-    
-    # Player
-    player_width = 50
-    player_height = 15
-    player_x = WIDTH // 2 - player_width // 2
-    player_y = HEIGHT - player_height - 10
-    player_speed = 7
+    # Load bird image
+    bird_img = pygame.image.load('bird.png')  # Replace with the path to your bird PNG
+    bird_img = pygame.transform.scale(bird_img, (50, 50))  # Resize the image
 
-    # Bullets
-    bullets = []
-    bullet_speed = -8
-    bullet_width = 5
-    bullet_height = 10
+    def retry():
+        flappy_bird()  # Restart the game
 
-    # Enemies - Dynamic shapes
-    def create_enemies():
-     
-        enemies = []
-        for row in range(enemy_rows):
-            row_enemies = []
-            for col in range(enemy_cols):
-                shape_type = random.choice(['rectangle', 'circle', 'triangle'])
-                size = random.randint(25, 40)
-                x = col * (size + 10) + 60
-                y = row * (size + 10) + 50
-                row_enemies.append({
-                    'shape': shape_type,
-                    'size': size,
-                    'x': x,
-                    'y': y,
-                    'color': random.choice([RED, GREEN, BLUE])
-                })
-            enemies.append(row_enemies)
-        return enemies
-    
-    enemy_rows = 4
-    enemy_cols = 8
-    enemy_speed = 20  
-    enemy_direction = 1
-    enemy_y_down = 10
-    enemies = create_enemies()
-
-    # Game variables
-    score = 0
-    game_over = False
-    font = get_scaled_font(int(HEIGHT * 0.05))
-
-
-    def draw_player():
-        pygame.draw.rect(screen, GREEN, (player_x, player_y, player_width, player_height))
-
-    def draw_bullets():
-        for bullet in bullets:
-            pygame.draw.rect(screen, YELLOW, bullet)
-
-    def draw_enemies():
-        for row in enemies:
-            for enemy in row:
-                if enemy['shape'] == 'rectangle':
-                    pygame.draw.rect(screen, enemy['color'], (enemy['x'], enemy['y'], enemy['size'], enemy['size']))
-                elif enemy['shape'] == 'circle':
-                    pygame.draw.circle(screen, enemy['color'], (enemy['x'] + enemy['size'] // 2, enemy['y'] + enemy['size'] // 2), enemy['size'] // 2)
-                elif enemy['shape'] == 'triangle':
-                    points = [
-                        (enemy['x'], enemy['y'] + enemy['size']),
-                        (enemy['x'] + enemy['size'], enemy['y'] + enemy['size']),
-                        (enemy['x'] + enemy['size'] // 2, enemy['y'])
-                    ]
-                    pygame.draw.polygon(screen, enemy['color'], points)
-
-    def move_enemies():
-        nonlocal enemy_direction, game_over
-        edge_reached = False
-        for row in enemies:
-            for enemy in row:
-                enemy['x'] += enemy_speed * enemy_direction
-                if enemy['x'] <= 0 or enemy['x'] + enemy['size'] >= WIDTH:
-                    edge_reached = True
-
-        if edge_reached:
-            enemy_direction *= -1
-            for row in enemies:
-                for enemy in row:
-                    enemy['y'] += enemy_y_down
-                    if enemy['y'] + enemy['size'] >= player_y:
-                        game_over = True
-
-    def handle_bullet_collisions():
-        nonlocal score
-        for bullet in bullets[:]:
-            for row in enemies:
-                for enemy in row[:]:
-                    if pygame.Rect(bullet.x, bullet.y, bullet_width, bullet_height).colliderect(pygame.Rect(enemy['x'], enemy['y'], enemy['size'], enemy['size'])):
-                        bullets.remove(bullet)
-                        row.remove(enemy)
-                        score += 10
-                        break
-
-    def reset_game():
-        nonlocal enemies, score, game_over
-        enemies = create_enemies()
-        game_over = False
+    def draw_pipe(surface, x, height, inverted=False):
+        pipe_color = GREEN
+        outline_color = BLACK
+        pipe_width = 80
+        if inverted:
+            # Top pipe with outline
+            outer_rect = pygame.Rect(x - 2, -2, pipe_width + 4, height + 4)  # Border dimensions
+            inner_rect = pygame.Rect(x, 0, pipe_width, height)  # Pipe dimensions
+            pygame.draw.rect(surface, outline_color, outer_rect)  # Draw black outline
+            pygame.draw.rect(surface, pipe_color, inner_rect)  # Fill pipe color
+        else:
+            # Bottom pipe with outline
+            outer_rect = pygame.Rect(x - 2, height + pipe_gap - 2, pipe_width + 4, HEIGHT - height - pipe_gap + 4)
+            inner_rect = pygame.Rect(x, height + pipe_gap, pipe_width, HEIGHT - height - pipe_gap)
+            pygame.draw.rect(surface, outline_color, outer_rect)  # Draw black outline
+            pygame.draw.rect(surface, pipe_color, inner_rect)  # Fill pipe color
 
     while state == "game":
         for event in pygame.event.get():
@@ -618,52 +542,75 @@ def space_game():
                     result = pause_menu()
                     if result == "menu":
                         state = "menu"
-                        return
-                elif event.key == pygame.K_SPACE:
-                    if not game_over:
-                        bullets.append(pygame.Rect(player_x + player_width // 2 - bullet_width // 2,
-                                                   player_y - bullet_height, bullet_width, bullet_height))
+                        return  # Return to main menu
 
+        # Game Logic
         keys = pygame.key.get_pressed()
-        if not game_over:
-            if keys[pygame.K_LEFT] and player_x > 0:
-                player_x -= player_speed
-            if keys[pygame.K_RIGHT] and player_x + player_width < WIDTH:
-                player_x += player_speed
+        if keys[pygame.K_SPACE] or keys[pygame.K_UP]:
+            bird_velocity = flap_strength
 
-        # Update bullets
-        if not game_over:
-            bullets = [bullet.move(0, bullet_speed) for bullet in bullets if bullet.y > 0]
+        bird_y += bird_velocity
+        bird_velocity += gravity
 
-            # Check collisions
-            handle_bullet_collisions()
-
-            # Move enemies
-            move_enemies()
-
-            # Check if all enemies are defeated
-            if all(not row for row in enemies):
-                reset_game()
-
-        # Drawing
-        screen.fill(BLACK)
-        draw_player()
-        draw_bullets()
-        draw_enemies()
-
-        # Display score
-        score_text = font.render(f"Score: {score}", True, WHITE)
-        screen.blit(score_text, (10, 10))
-
-        # Game Over screen
-        if game_over:
-            winner_text = f" Score: {score}"
-            show_scoreboard(winner_text, space_game)
+        # Prevent bird from going off-screen
+        if bird_y < 0:
+            bird_y = 0
+            bird_velocity = 0
+        elif bird_y > HEIGHT - 50:
+            show_scoreboard(score, retry, False)
             state = "menu"
             return
 
+        # Spawn pipes at intervals
+        spawn_timer += 1
+        if spawn_timer >= spawn_interval:
+            spawn_timer = 0
+            pipe_height = random.randint(100, HEIGHT - pipe_gap - 100)
+            pipes.append([WIDTH, pipe_height, False])
+
+        # Move and manage pipes
+        for pipe in pipes:
+            pipe[0] -= pipe_speed
+
+            # Update score if bird passes the pipe
+            if pipe[0] + 80 < 100 and not pipe[2]:  # Adjusted pipe size
+                score += 1
+                pipe[2] = True  # Mark as passed
+
+        # Gradually increase pipe speed based on score
+        pipe_speed = 10 + score // 5  # Increase speed every 5 points
+
+        # Remove off-screen pipes
+        pipes = [pipe for pipe in pipes if pipe[0] > -80]
+
+        # Collision detection
+        bird_rect = pygame.Rect(100, bird_y, 50, 50)  # Match bird image size
+        for pipe in pipes:
+            top_pipe_rect = pygame.Rect(pipe[0], 0, 80, pipe[1])
+            bottom_pipe_rect = pygame.Rect(pipe[0], pipe[1] + pipe_gap, 80, HEIGHT - pipe[1] - pipe_gap)
+            if bird_rect.colliderect(top_pipe_rect) or bird_rect.colliderect(bottom_pipe_rect):
+                show_scoreboard(score, retry, False)
+                state = "menu"
+                return
+
+        # Draw game
+        screen.fill(SKY_BLUE)
+
+        # Draw bird
+        screen.blit(bird_img, (100, bird_y))
+
+        # Draw pipes
+        for pipe in pipes:
+            draw_pipe(screen, pipe[0], pipe[1], inverted=True)  # Top pipe
+            draw_pipe(screen, pipe[0], pipe[1])  # Bottom pipe
+
+        # Display score
+        font = get_scaled_font(int(HEIGHT * 0.05))
+        score_text = font.render(f"Score: {score}", True, WHITE)
+        screen.blit(score_text, (10, 10))
+
         pygame.display.flip()
-        clock.tick(60)
+        clock.tick(60)  # Set game to run at 60 FPS
 
 
 def tictactoe_game():
@@ -802,7 +749,7 @@ def tictactoe_game():
         if not game_over and current_player == "X":  # Highlight only for the player's turn
             pygame.draw.rect(
                 screen,
-                RED,
+                RED, 
                 (
                     cursor_position[1] * CELL_WIDTH,
                     cursor_position[0] * CELL_HEIGHT,
@@ -827,7 +774,7 @@ games = [
     {"name": "Dino Game", "func": dino_game, "icon": game_icons[0]},
     {"name": "Snake Game", "func": snake_game, "icon": game_icons[1]},
     {"name": "Tetris", "func": tetris_game , "icon": game_icons[2]},
-    {"name": "Space Invaders", "func": space_game, "icon": game_icons[3]},
+    {"name": "Flappy Bird", "func": flappy_bird, "icon": game_icons[3]},
     {"name": "Tic-Tac-Toe", "func": tictactoe_game, "icon": game_icons[4]},
 ]
 
