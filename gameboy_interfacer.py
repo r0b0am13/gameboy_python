@@ -335,8 +335,8 @@ def snake_game():
         screen.blit(score_text, (10, 10))
 
         if game_over:
-            show_scoreboard(score, snake_game)  # Allow retry by passing snake_game
-            state = "menu"  # Go back to menu after showing scoreboard
+            show_scoreboard(score, snake_game,False)  # Allow retry by passing snake_game
+            state = "menu"  # Go back to menu after showing scoreboard 
             return
 
         pygame.display.flip()
